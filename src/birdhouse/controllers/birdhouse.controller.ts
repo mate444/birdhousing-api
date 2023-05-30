@@ -1,6 +1,6 @@
 import { Router, Request, NextFunction, Response } from "express";
 import { validate } from 'class-validator';
-import { CreateBirdhouseDto, DeleteBirdhouseDto } from "../dtos/birdhouse.dto";
+import { CreateBirdhouseDto, DeleteBirdhouseDto, UpdateBirdhouseDto } from "../dtos/birdhouse.dto";
 import { BirdhouseService } from "../services/birdhouse.service";
 import multer from 'multer';
 const upload = multer({ dest: 'uploads/' });
@@ -62,6 +62,33 @@ router.delete('/', async (req:Request, res: Response, next: NextFunction) => {
     const deletedBirdhouse = await birdhouseService.softDelete(birdhouseId, status);
     if (!deletedBirdhouse) return res.sendStatus(404);
     res.send(deletedBirdhouse);
+  } catch (err) {
+    console.log(err.message, err.stack);
+    res.sendStatus(500);
+  }
+});
+
+router.patch('/', async (req:Request, res:Response, next: NextFunction) => {
+  try {
+    const { birdhouseId, colors, size, price, name, description, stock, styles } = req.body;
+    const pictures = req.files;
+    const birdhouseDto = new UpdateBirdhouseDto();
+    birdhouseDto.birdhouseId = birdhouseId;
+    birdhouseDto.colors = colors;
+    birdhouseDto.size = size;
+    birdhouseDto.price = price;
+    birdhouseDto.description = description;
+    birdhouseDto.stock = stock;
+    birdhouseDto.pictures = pictures;
+    birdhouseDto.styles = styles;
+    birdhouseDto.name = name;
+    const errors = await validate(birdhouseDto);
+    if (errors.length) {
+      return res.status(400).send(errors);
+    }
+    const birdhouseService = new BirdhouseService();
+    const updatedBirdhouse = await birdhouseService.update(req.body);
+    res.send(updatedBirdhouse);
   } catch (err) {
     console.log(err.message, err.stack);
     res.sendStatus(500);
