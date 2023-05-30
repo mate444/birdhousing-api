@@ -1,11 +1,18 @@
+import { Express } from 'express';
+export enum BirdhouseStatusEnum {
+  active,
+  inactive
+}
+
 export interface BirdhouseInterface {
   birdhouseId: string;
   name: string;
   price: number;
   description: string;
-  status: string;
+  stock: number;
+  status: BirdhouseStatusEnum;
   size: number;
   colors: string[];
-  pictures: string[];
+  pictures: Express.Multer.File[] | undefined;
   styles: string[];
 }
