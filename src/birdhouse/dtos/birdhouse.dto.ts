@@ -5,10 +5,13 @@ import {
   IsString,
   IsArray,
   IsOptional,
-  IsNumber
+  IsNumber,
+  IsUUID,
+  IsEnum
 } from "class-validator";
 import { isFile } from "../../common/validateFile";
 import { Express } from 'express';
+import { BirdhouseStatusEnum } from "../interfaces/birdhouse.interface";
 
 export class CreateBirdhouseDto {
   @IsString()
@@ -54,4 +57,12 @@ export class CreateBirdhouseDto {
   @MinLength(1, { each: true, message: 'Birdhouse style is too short' })
   @MaxLength(45, { each: true, message: 'Birdhouse style is too long' })
     styles: string[];
+}
+
+export class DeleteBirdhouseDto {
+  @IsUUID(4, { message: 'Birdhouse id must be a V4 UUID' })
+    birdhouseId: string;
+
+  @IsEnum(BirdhouseStatusEnum, { message: 'Birdhouse status is incorrect' })
+    status: BirdhouseStatusEnum;
 }

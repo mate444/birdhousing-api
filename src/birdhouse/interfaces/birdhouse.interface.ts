@@ -1,7 +1,7 @@
 import { Express } from 'express';
 export enum BirdhouseStatusEnum {
-  active,
-  inactive
+  active = 'active',
+  inactive = 'inactive'
 }
 
 export interface BirdhouseInterface {

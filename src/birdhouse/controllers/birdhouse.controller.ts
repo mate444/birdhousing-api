@@ -1,6 +1,6 @@
 import { Router, Request, NextFunction, Response } from "express";
 import { validate } from 'class-validator';
-import { CreateBirdhouseDto } from "../dtos/birdhouse.dto";
+import { CreateBirdhouseDto, DeleteBirdhouseDto } from "../dtos/birdhouse.dto";
 import { BirdhouseService } from "../services/birdhouse.service";
 import multer from 'multer';
 const upload = multer({ dest: 'uploads/' });
@@ -28,7 +28,7 @@ router.post('/', upload.array('pictures', 9), async (req: Request, res: Response
     const result = await birdhouseService.create(req.body);
     res.status(201).send(result);
   } catch (err) {
-    console.log(err.message);
+    console.log(err.message, err.stack);
     res.sendStatus(500);
   }
 });
@@ -43,7 +43,27 @@ router.get('/:id', async (req: Request, res: Response, next:NextFunction) => {
     }
     res.send(foundBirdhouse);
   } catch (err) {
-    console.log(err.message);
+    console.log(err.message, err.stack);
+    res.sendStatus(500);
+  }
+});
+
+router.delete('/', async (req:Request, res: Response, next: NextFunction) => {
+  try {
+    const { birdhouseId, status } = req.body;
+    const birdHouseDto = new DeleteBirdhouseDto();
+    birdHouseDto.birdhouseId = birdhouseId;
+    birdHouseDto.status = status;
+    const errors = await validate(birdHouseDto);
+    if (errors.length) {
+      return res.status(400).send(errors);
+    }
+    const birdhouseService = new BirdhouseService();
+    const deletedBirdhouse = await birdhouseService.softDelete(birdhouseId, status);
+    if (!deletedBirdhouse) return res.sendStatus(404);
+    res.send(deletedBirdhouse);
+  } catch (err) {
+    console.log(err.message, err.stack);
     res.sendStatus(500);
   }
 });
