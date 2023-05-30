@@ -81,4 +81,41 @@ export class BirdhouseService {
       throw new Error(err);
     }
   }
+
+  async update (data: BirdhouseInterface) {
+    try {
+      await this.SQLQuery(`UPDATE birdhouse SET
+        name = ?,
+        price = ?,
+        stock = ?,
+        size = ?,
+        description = ?
+        WHERE birdhouseId = ?`, [data.name,
+        data.price,
+        data.stock,
+        data.size,
+        data.description,
+        data.birdhouseId
+      ]);
+
+      await this.SQLQuery(`DELETE from birdhouse_picture WHERE birdhouseId = ?`, [data.birdhouseId]);
+      for (let i = 0; i < data.pictures.length; i += 1) {
+        await this.SQLQuery(`INSERT INTO birdhouse_picture(birdhouseId, picture) VALUES(?, ?)`, [data.birdhouseId,
+          data.pictures[i]]);
+      }
+      await this.SQLQuery(`DELETE from birdhouse_style WHERE birdhouseId = ?`, [data.birdhouseId]);
+      for (let i = 0; i < data.styles.length; i += 1) {
+        await this.SQLQuery(`INSERT INTO birdhouse_style(birdhouseId, style) VALUES(?, ?)`, [data.birdhouseId,
+          data.styles[i]]);
+      }
+      await this.SQLQuery(`DELETE from birdhouse_color WHERE birdhouseId = ?`, [data.birdhouseId]);
+      for (let i = 0; i < data.colors.length; i += 1) {
+        await this.SQLQuery(`INSERT INTO birdhouse_color(birdhouseId, color) VALUES(?, ?)`, [data.birdhouseId,
+          data.colors[i]]);
+      }
+      return data;
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
 }
