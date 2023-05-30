@@ -29,7 +29,22 @@ router.post('/', upload.array('pictures', 9), async (req: Request, res: Response
     res.status(201).send(result);
   } catch (err) {
     console.log(err.message);
-    res.status(500).send(err);
+    res.sendStatus(500);
+  }
+});
+
+router.get('/:id', async (req: Request, res: Response, next:NextFunction) => {
+  try {
+    const { id } = req.params;
+    const birdhouseService = new BirdhouseService();
+    const foundBirdhouse = await birdhouseService.getById(id);
+    if (foundBirdhouse.length < 1) {
+      return res.sendStatus(404);
+    }
+    res.send(foundBirdhouse);
+  } catch (err) {
+    console.log(err.message);
+    res.sendStatus(500);
   }
 });
 
