@@ -1,47 +1,57 @@
-import { query } from '../../common/createQuery';
 import { BirdhouseInterface, BirdhouseStatusEnum } from '../interfaces/birdhouse.interface';
-import { v4 as uuid } from 'uuid';
 import fsPromise from 'fs/promises';
+import { Manager } from '../../database/connection';
+import { Birdhouse } from '../entities/Birdhouse.entity';
+import { Birdhouse_style } from '../../birdhouse/entities/Birdhouse_style.entity';
+import { Birdhouse_color } from '../entities/Birdhouse_color.entity';
+import { Birdhouse_picture } from '../entities/Birdhouse_picture.entity';
+import { v4 as uuid } from 'uuid';
+import { ILike } from 'typeorm';
 
 export class BirdhouseService {
-  SQLQuery = query;
+  entityManager = Manager;
   async create (data: BirdhouseInterface) {
     try {
-      const status = 'active';
       const birdhouseId = uuid();
-      await this.SQLQuery(`INSERT INTO birdhouse (birdhouseId,
-        name,
-        price,
-        description,
-        status,
-        stock,
-        size) VALUES(?, ?, ?, ?, ?, ?, ?)`,
-      [birdhouseId,
-        data.name,
-        data.price,
-        data.description,
-        status,
-        data.stock,
-        data.size
-      ]);
-
+      const entitesToSave = [];
+      const createdBirdhouse = this.entityManager.create(Birdhouse, {
+        birdhouseId,
+        name: data.name,
+        price: data.price,
+        description: data.description,
+        stock: data.stock,
+        size: data.size,
+        pictures: [],
+        colors: [],
+        styles: []
+      });
+      entitesToSave.push(createdBirdhouse);
       if (data.pictures) {
         for (let i = 0; i < data.pictures.length; i += 1) {
           const file = await fsPromise.readFile(data.pictures[i].path, 'binary');
-          await this.SQLQuery(`INSERT into birdhouse_picture (birdhouseId, picture) VALUES(?, ?)`,
-            [birdhouseId, file]);
+          const createdPicture = this.entityManager.create(Birdhouse_picture, {
+            picture: file
+          });
+          createdBirdhouse.pictures.push(createdPicture);
+          entitesToSave.push(createdPicture);
           await fsPromise.unlink(data.pictures[i].path);
         }
       }
       for (let i = 0; i < data.styles.length; i += 1) {
-        await this.SQLQuery(`INSERT into birdhouse_style (birdhouseId, style) VALUES(?, ?)`,
-          [birdhouseId, data.styles[i]]);
+        const createdStyle = this.entityManager.create(Birdhouse_style, {
+          style: data.styles[i]
+        });
+        createdBirdhouse.styles.push(createdStyle);
+        entitesToSave.push(createdStyle);
       }
       for (let i = 0; i < data.colors.length; i += 1) {
-        await this.SQLQuery(`INSERT into birdhouse_color (birdhouseId, color) VALUES(?, ?)`,
-          [birdhouseId, data.colors[i]]);
+        const createdColor = this.entityManager.create(Birdhouse_color, {
+          color: data.colors[i]
+        });
+        entitesToSave.push(createdColor);
+        createdBirdhouse.colors.push(createdColor);
       }
-
+      await this.entityManager.save(entitesToSave);
       return "Created";
     } catch (err: any) {
       throw new Error(err);
@@ -50,14 +60,17 @@ export class BirdhouseService {
 
   async getById (id: string) {
     try {
-      const foundBirdhouse = await this.SQLQuery(`SELECT
-        name, price, description, stock, size, color, picture, style
-        FROM birdhouse
-        INNER JOIN birdhouse_color ON birdhouse_color.birdhouseId = birdhouse.birdhouseId
-        INNER JOIN birdhouse_style ON birdhouse_style.birdhouseId = birdhouse.birdhouseId
-        INNER JOIN birdhouse_picture ON birdhouse_picture.birdhouseId = birdhouse.birdhouseId
-        WHERE birdhouse.birdhouseId = ?`, [id]);
-      return foundBirdhouse[0][0];
+      const foundBirdhouse = await this.entityManager.findOne(Birdhouse, {
+        where: {
+          birdhouseId: id
+        },
+        relations: {
+          pictures: true,
+          colors: true,
+          styles: true
+        }
+      });
+      return foundBirdhouse;
     } catch (err) {
       throw new Error(err);
     }
@@ -65,12 +78,8 @@ export class BirdhouseService {
 
   async softDelete (id: string, status: BirdhouseStatusEnum) {
     try {
-      const deletedBirdhouseResult = await this.SQLQuery(`UPDATE birdhouse 
-      SET status = ?
-      WHERE birdhouseId = ?`, [status, id]);
-      if (deletedBirdhouseResult.affectedRows === 0) {
-        return false;
-      }
+      const deletedBirdhouseResult = await this.entityManager.update(Birdhouse, { birdhouseId: id }, { status });
+      if (deletedBirdhouseResult.affected < 1) return false;
       if (status === 'inactive') {
         return 'Deleted';
       }
@@ -84,38 +93,122 @@ export class BirdhouseService {
 
   async update (data: BirdhouseInterface) {
     try {
-      await this.SQLQuery(`UPDATE birdhouse SET
-        name = ?,
-        price = ?,
-        stock = ?,
-        size = ?,
-        description = ?
-        WHERE birdhouseId = ?`, [data.name,
-        data.price,
-        data.stock,
-        data.size,
-        data.description,
-        data.birdhouseId
-      ]);
-
-      await this.SQLQuery(`DELETE from birdhouse_picture WHERE birdhouseId = ?`, [data.birdhouseId]);
+      await this.entityManager.update(Birdhouse, { birdhouseId: data.birdhouseId }, {
+        name: data.name,
+        price: data.price,
+        size: data.size,
+        description: data.description,
+        stock: data.stock
+      });
+      await this.entityManager.delete(Birdhouse_picture, { birdhouse: data.birdhouseId });
       for (let i = 0; i < data.pictures.length; i += 1) {
-        await this.SQLQuery(`INSERT INTO birdhouse_picture(birdhouseId, picture) VALUES(?, ?)`, [data.birdhouseId,
-          data.pictures[i]]);
+        this.entityManager.save(Birdhouse_picture, {
+          picture: data.pictures[i]
+        });
       }
-      await this.SQLQuery(`DELETE from birdhouse_style WHERE birdhouseId = ?`, [data.birdhouseId]);
+      await this.entityManager.delete(Birdhouse_style, { birdhouse: data.birdhouseId });
       for (let i = 0; i < data.styles.length; i += 1) {
-        await this.SQLQuery(`INSERT INTO birdhouse_style(birdhouseId, style) VALUES(?, ?)`, [data.birdhouseId,
-          data.styles[i]]);
+        this.entityManager.save(Birdhouse_style, {
+          style: data.styles[i]
+        });
       }
-      await this.SQLQuery(`DELETE from birdhouse_color WHERE birdhouseId = ?`, [data.birdhouseId]);
+      await this.entityManager.delete(Birdhouse_color, { birdhouse: data.birdhouseId });
       for (let i = 0; i < data.colors.length; i += 1) {
-        await this.SQLQuery(`INSERT INTO birdhouse_color(birdhouseId, color) VALUES(?, ?)`, [data.birdhouseId,
-          data.colors[i]]);
+        this.entityManager.save(Birdhouse_color, {
+          color: data.colors[i]
+        });
       }
       return data;
     } catch (err) {
       throw new Error(err);
+    }
+  }
+
+  async getAll (search: string | undefined, sort: string | undefined, page: number) {
+    try {
+      const numItems = 10;
+      const totalCount = await this.entityManager.count(Birdhouse);
+      const totalPages = Math.ceil(totalCount / numItems);
+      if (!sort) {
+        const foundBirdhouses = await this.entityManager.find(Birdhouse, {
+          select: {
+            name: true,
+            price: true,
+            stock: true,
+            size: true,
+            styles: true,
+            colors: true,
+            pictures: true
+          },
+          where: {
+            name: ILike(`%${search}%`)
+          },
+          skip: (page - 1) * numItems,
+          take: numItems
+        });
+        return { data: foundBirdhouses, totalPages };
+      }
+
+      if (sort.length > 0) {
+        const sortType = this.getSortType(sort);
+        const foundBirdhouses = await this.entityManager.find(Birdhouse, {
+          select: {
+            name: true,
+            price: true,
+            stock: true,
+            size: true,
+            styles: true,
+            colors: true,
+            pictures: true
+          },
+          where: {
+            name: ILike(`%${search}%`)
+          },
+          skip: (page - 1) * numItems,
+          take: numItems,
+          order: {
+            [sortType.field]: sortType.sortType
+          }
+        });
+        return { data: foundBirdhouses, totalPages };
+      }
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
+
+  getSortType (sortType: string): { field:string, sortType: string } {
+    switch (sortType) {
+      case 'price_asc':
+        return {
+          field: 'price',
+          sortType: 'ASC'
+        };
+      case 'price_desc':
+        return {
+          field: 'price',
+          sortType: 'DESC'
+        };
+      case 'name_asc':
+        return {
+          field: 'name',
+          sortType: 'ASC'
+        };
+      case 'name_desc':
+        return {
+          field: 'name',
+          sortType: 'DESC'
+        };
+      case 'size_asc':
+        return {
+          field: 'size',
+          sortType: 'ASC'
+        };
+      case 'size_desc':
+        return {
+          field: 'size',
+          sortType: 'DESC'
+        };
     }
   }
 }

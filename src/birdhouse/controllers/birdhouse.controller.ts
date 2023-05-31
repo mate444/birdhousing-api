@@ -38,7 +38,7 @@ router.get('/:id', async (req: Request, res: Response, next:NextFunction) => {
     const { id } = req.params;
     const birdhouseService = new BirdhouseService();
     const foundBirdhouse = await birdhouseService.getById(id);
-    if (foundBirdhouse.length < 1) {
+    if (!foundBirdhouse) {
       return res.sendStatus(404);
     }
     res.send(foundBirdhouse);
@@ -89,6 +89,19 @@ router.patch('/', async (req:Request, res:Response, next: NextFunction) => {
     const birdhouseService = new BirdhouseService();
     const updatedBirdhouse = await birdhouseService.update(req.body);
     res.send(updatedBirdhouse);
+  } catch (err) {
+    console.log(err.message, err.stack);
+    res.sendStatus(500);
+  }
+});
+
+router.get('/', async (req:Request, res:Response) => {
+  try {
+    const { sort, page, search } = req.query;
+    if (!page) return res.status(400).send('Page is required');
+    const birdhouseService = new BirdhouseService();
+    const birdhouses = await birdhouseService.getAll(`${search}`, `${sort}`, parseInt(`${page}`));
+    res.send(birdhouses);
   } catch (err) {
     console.log(err.message, err.stack);
     res.sendStatus(500);
