@@ -6,7 +6,7 @@ import { Birdhouse_style } from '../birdhouse/entities/Birdhouse_style.entity';
 import { Birdhouse_color } from '../birdhouse/entities/Birdhouse_color.entity';
 import { User } from '../user/entities/User.entity';
 import { User_role } from '../user/entities/User_role.entity';
-import { User_permission } from '../user/entities/Role_permission.entity';
+import { User_permission } from '../user/entities/User_permission';
 
 dotenv.config();
 
