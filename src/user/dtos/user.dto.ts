@@ -80,3 +80,16 @@ export class UserUpdateDto {
   })
     lastname: string;
 }
+
+export class UserUpdatePasswordDto {
+  @IsEmail()
+    email: string;
+
+  @IsString()
+  @IsStrongPassword()
+    password: string;
+
+  @IsString()
+  @IsStrongPassword()
+    newPassword: string;
+}

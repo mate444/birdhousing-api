@@ -1,7 +1,7 @@
 import { Router, Request, NextFunction, Response } from "express";
 import { validate } from 'class-validator';
 import { UserService } from "../services/user.service";
-import { CreateUserDto, DeleteUserDto, UserLoginDto, UserUpdateDto } from "../dtos/user.dto";
+import { CreateUserDto, DeleteUserDto, UserLoginDto, UserUpdateDto, UserUpdatePasswordDto } from "../dtos/user.dto";
 
 const router = Router();
 
@@ -95,8 +95,28 @@ router.patch('/', async (req: Request, res: Response, next: NextFunction) => {
     const updatedUser = await userService.updateData(req.body);
     res.send(updatedUser);
   } catch (err) {
-    console.log(err.message);
-    console.log(err.stack);
+    console.log(err.message, err.stack);
+    res.sendStatus(500);
+  }
+});
+
+router.put('/password', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { email, password, newPassword } = req.body;
+    if (password !== newPassword) return res.status(400).send('Passwords do not match');
+    const userDto = new UserUpdatePasswordDto();
+    userDto.email = email;
+    userDto.newPassword = newPassword;
+    userDto.password = password;
+    const errors = await validate(userDto);
+    if (errors.length) {
+      return res.status(400).send(errors);
+    }
+    const userService = new UserService();
+    const updatedPassword = await userService.updatePassword(email, newPassword);
+    res.send(updatedPassword);
+  } catch (err) {
+    console.log(err.message, err.stack);
     res.sendStatus(500);
   }
 });
