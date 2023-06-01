@@ -57,3 +57,26 @@ export class UserLoginDto {
   @IsStrongPassword()
     password: string;
 }
+
+export class UserUpdateDto {
+  @IsString()
+  @IsUUID(4, { message: 'User id must be a V4 UUID' })
+    id: string;
+
+  @MinLength(1, {
+    message: 'User Name is too short'
+  })
+  @MaxLength(30, {
+    message: 'User Name is too long'
+  })
+    name: string;
+
+  @IsString()
+  @MinLength(1, {
+    message: 'User Lastname is too short'
+  })
+  @MaxLength(30, {
+    message: 'User Lastname is too long'
+  })
+    lastname: string;
+}

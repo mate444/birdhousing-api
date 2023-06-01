@@ -1,7 +1,7 @@
 import { Router, Request, NextFunction, Response } from "express";
 import { validate } from 'class-validator';
 import { UserService } from "../services/user.service";
-import { CreateUserDto, DeleteUserDto, UserLoginDto } from "../dtos/user.dto";
+import { CreateUserDto, DeleteUserDto, UserLoginDto, UserUpdateDto } from "../dtos/user.dto";
 
 const router = Router();
 
@@ -76,6 +76,27 @@ router.delete('/', async (req: Request, res: Response, next: NextFunction) => {
     res.send(deletedUser);
   } catch (err) {
     console.log(err.message, err.stack);
+    res.sendStatus(500);
+  }
+});
+
+router.patch('/', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id, lastname, name } = req.body;
+    const updateUserDto = new UserUpdateDto();
+    updateUserDto.id = id;
+    updateUserDto.lastname = lastname;
+    updateUserDto.name = name;
+    const errors = await validate(updateUserDto);
+    if (errors.length) {
+      return res.status(400).send(errors);
+    }
+    const userService = new UserService();
+    const updatedUser = await userService.updateData(req.body);
+    res.send(updatedUser);
+  } catch (err) {
+    console.log(err.message);
+    console.log(err.stack);
     res.sendStatus(500);
   }
 });
