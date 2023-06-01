@@ -1,7 +1,7 @@
 import { Router, Request, NextFunction, Response } from "express";
 import { validate } from 'class-validator';
 import { UserService } from "../services/user.service";
-import { CreateUserDto, DeleteUserDto } from "../dtos/user.dto";
+import { CreateUserDto, DeleteUserDto, UserLoginDto } from "../dtos/user.dto";
 
 const router = Router();
 
@@ -26,11 +26,34 @@ router.post('/register', async (req: Request, res: Response, next: NextFunction)
   }
 });
 
+router.post('/login', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { email, password } = req.body;
+    const userDto = new UserLoginDto();
+    userDto.email = email;
+    userDto.password = password;
+    const errors = await validate(userDto);
+    if (errors.length) {
+      return res.status(400).send(errors);
+    }
+    const userService = new UserService();
+    const foundUser = await userService.findOne({ email });
+    if (!foundUser) return res.sendStatus(404);
+    if (foundUser.status === 'inactive') return res.status(401).send("User is currently inactive");
+    const passwordValidationResult = await userService.verifyPassword(password, foundUser.password);
+    if (!passwordValidationResult) return res.status(400).send("Wrong password");
+    res.send(foundUser);
+  } catch (err) {
+    console.log(err.message, err.stack);
+    res.sendStatus(500);
+  }
+});
+
 router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     const userService = new UserService();
-    const foundUser = await userService.getById(id);
+    const foundUser = await userService.findOne({ id });
     if (!foundUser) {
       return res.sendStatus(404);
     }

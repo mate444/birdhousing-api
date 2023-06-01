@@ -48,3 +48,12 @@ export class DeleteUserDto {
   @IsEnum(UserStatusEnum, { message: 'User status is incorrect' })
     status: string;
 }
+
+export class UserLoginDto {
+  @IsEmail()
+    email: string;
+
+  @IsString()
+  @IsStrongPassword()
+    password: string;
+}
