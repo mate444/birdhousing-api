@@ -1,4 +1,4 @@
-import { UserInterface } from "../interfaces/user.interface";
+import { UserInterface, UserStatusEnum } from "../interfaces/user.interface";
 import { Manager } from "../../database/connection";
 import { User } from "../entities/User.entity";
 import { User_permission } from "../entities/User_permission";
@@ -52,6 +52,21 @@ export class UserService {
         relations: ['role']
       });
       return foundUser;
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
+
+  async softDelete (id: string, status: UserStatusEnum) {
+    try {
+      const deletedUserResult = await this.entityManager.update(User, { id }, { status });
+      if (deletedUserResult.affected < 1) return false;
+      if (status === 'inactive') {
+        return 'Deleted';
+      }
+      if (status === 'active') {
+        return "Restored";
+      }
     } catch (err) {
       throw new Error(err);
     }
