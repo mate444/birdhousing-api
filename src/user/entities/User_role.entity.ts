@@ -7,10 +7,10 @@ export class User_role {
   @PrimaryGeneratedColumn('increment')
     id: number;
 
-  @Column({ type: 'enum', enum: UserRoleEnum })
+  @Column({ type: 'enum', enum: UserRoleEnum, unique: true })
     rolename: string;
 
-  @ManyToMany(() => User_permission, { cascade: true })
+  @ManyToMany(() => User_permission, { cascade: true, eager: true })
   @JoinTable()
     permissions: User_permission[];
 }

@@ -23,8 +23,35 @@ export class UserService {
         select: { id: true }
       });
       createdUser.role = clientRole.id;
-      await this.entityManager.save(createdUser);
-      return "Created";
+      const userId = (await this.entityManager.save(createdUser)).id;
+      const savedUser = await this.entityManager.find(User, {
+        where: {
+          id: userId
+        },
+        relations: ['role']
+      });
+      return savedUser;
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
+
+  async getById (id:string) {
+    try {
+      const foundUser = await this.entityManager.findOne(User, {
+        where: {
+          id
+        },
+        select: {
+          id: true,
+          email: true,
+          lastname: true,
+          role: true,
+          name: true
+        },
+        relations: ['role']
+      });
+      return foundUser;
     } catch (err) {
       throw new Error(err);
     }
