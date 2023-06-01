@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, JoinColumn, ManyToOne } from "typeorm";
 import { UserStatusEnum } from "../interfaces/user.interface";
 import { User_role } from "./User_role.entity";
 
@@ -13,7 +13,7 @@ export class User {
   @Column({ type: 'varchar', length: 80 })
     password: string;
 
-  @Column({ type: 'enum', enum: UserStatusEnum })
+  @Column({ type: 'enum', enum: UserStatusEnum, default: 'active' })
     status: UserStatusEnum;
 
   @Column({ type: 'varchar', length: 30 })
@@ -22,7 +22,7 @@ export class User {
   @Column({ type: 'varchar', length: 30 })
     lastname: string;
 
-  @OneToOne(() => User_role, { cascade: true })
+  @ManyToOne(() => User_role, (user_role) => user_role.id)
   @JoinColumn()
-    roleId: number;
+    role: number;
 }
