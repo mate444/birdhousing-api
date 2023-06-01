@@ -92,4 +92,15 @@ export class UserService {
       throw new Error(err);
     }
   }
+
+  async updatePassword (email: string, newPassword: string) {
+    try {
+      const saltRounds = 10;
+      const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+      await this.entityManager.update(User, { email }, { password: hashedPassword });
+      return "Updated";
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
 }
