@@ -1,7 +1,7 @@
 import { Router, Request, NextFunction, Response } from "express";
 import { validate } from 'class-validator';
 import { UserService } from "../services/user.service";
-import { CreateUserDto } from "../dtos/user.dto";
+import { CreateUserDto, DeleteUserDto } from "../dtos/user.dto";
 
 const router = Router();
 
@@ -35,6 +35,22 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
       return res.sendStatus(404);
     }
     res.send(foundUser);
+  } catch (err) {
+    console.log(err.message, err.stack);
+    res.sendStatus(500);
+  }
+});
+
+router.delete('/', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id, status } = req.body;
+    const userDto = new DeleteUserDto();
+    userDto.id = id;
+    userDto.status = id;
+    const userService = new UserService();
+    const deletedUser = await userService.softDelete(id, status);
+    if (!deletedUser) return res.sendStatus(404);
+    res.send(deletedUser);
   } catch (err) {
     console.log(err.message, err.stack);
     res.sendStatus(500);

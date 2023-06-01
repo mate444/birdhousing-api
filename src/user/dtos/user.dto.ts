@@ -3,8 +3,11 @@ import {
   MaxLength,
   IsString,
   IsEmail,
-  IsStrongPassword
+  IsStrongPassword,
+  IsUUID,
+  IsEnum
 } from "class-validator";
+import { UserStatusEnum } from "../interfaces/user.interface";
 
 export class CreateUserDto {
   @IsString()
@@ -34,4 +37,14 @@ export class CreateUserDto {
   @IsString()
   @IsStrongPassword()
     password: string;
+}
+
+export class DeleteUserDto {
+  @IsString()
+  @IsUUID(4, { message: 'User id must be a V4 UUID' })
+    id: string;
+
+  @IsString()
+  @IsEnum(UserStatusEnum, { message: 'User status is incorrect' })
+    status: string;
 }
