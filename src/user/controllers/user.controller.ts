@@ -2,6 +2,7 @@ import { Router, Request, NextFunction, Response } from "express";
 import { validate } from 'class-validator';
 import { UserService } from "../services/user.service";
 import { CreateUserDto, DeleteUserDto, UserLoginDto, UserUpdateDto, UserUpdatePasswordDto } from "../dtos/user.dto";
+import { loginConsecutiveLimiter, loginDayLimiter } from "../../middleware/rateLimiters";
 
 const router = Router();
 
@@ -26,7 +27,8 @@ router.post('/register', async (req: Request, res: Response, next: NextFunction)
   }
 });
 
-router.post('/login', async (req: Request, res: Response, next: NextFunction) => {
+// eslint-disable-next-line max-len
+router.post('/login', loginConsecutiveLimiter, loginDayLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, password } = req.body;
     const userDto = new UserLoginDto();
