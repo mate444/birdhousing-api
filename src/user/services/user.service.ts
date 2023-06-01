@@ -36,18 +36,18 @@ export class UserService {
     }
   }
 
-  async getById (id:string) {
+  async findOne (key: { email: string } | { id: string }) {
     try {
+      const whereOptions = key;
       const foundUser = await this.entityManager.findOne(User, {
-        where: {
-          id
-        },
+        where: whereOptions,
         select: {
           id: true,
           email: true,
           lastname: true,
           role: true,
-          name: true
+          name: true,
+          password: true
         },
         relations: ['role']
       });
@@ -67,6 +67,15 @@ export class UserService {
       if (status === 'active') {
         return "Restored";
       }
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
+
+  async verifyPassword (password:string, userPassword: string) {
+    try {
+      const result = await bcrypt.compare(password, userPassword);
+      return result;
     } catch (err) {
       throw new Error(err);
     }
