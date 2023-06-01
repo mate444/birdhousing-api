@@ -14,7 +14,7 @@ export class UserService {
       const hashedPassword = await bcrypt.hash(data.password, saltRounds);
       const createdUser = this.entityManager.create(User, {
         name: data.name,
-        lastname: data.name,
+        lastname: data.lastname,
         email: data.email,
         password: hashedPassword
       });
@@ -76,6 +76,18 @@ export class UserService {
     try {
       const result = await bcrypt.compare(password, userPassword);
       return result;
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
+
+  async updateData (data: UserInterface) {
+    try {
+      await this.entityManager.update(User, { id: data.id }, {
+        name: data.name,
+        lastname: data.lastname
+      });
+      return data;
     } catch (err) {
       throw new Error(err);
     }
