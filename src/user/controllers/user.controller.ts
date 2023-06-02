@@ -3,6 +3,9 @@ import { validate } from 'class-validator';
 import { UserService } from "../services/user.service";
 import { CreateUserDto, DeleteUserDto, UserLoginDto, UserUpdateDto, UserUpdatePasswordDto } from "../dtos/user.dto";
 import { loginConsecutiveLimiter, loginDayLimiter } from "../../middleware/rateLimiters";
+import jwt from 'jsonwebtoken';
+import { serialize } from 'cookie';
+import { isAdmin } from "../../middleware/auth";
 
 const router = Router();
 
@@ -19,8 +22,19 @@ router.post('/register', async (req: Request, res: Response, next: NextFunction)
       return res.status(400).send(errors);
     }
     const userService = new UserService();
-    const result = await userService.create(req.body);
-    res.status(201).send(result);
+    const createdUser = await userService.create(req.body);
+    const sessionToken = jwt.sign({
+      role: createdUser.role,
+      id: createdUser.id
+    }, process.env.ACCESS_TOKEN, { expiresIn: '7 days' });
+    const serializedSessionCookie = serialize('auth', sessionToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 24 * 7 // 1 week
+    });
+    res.setHeader('Set-Cookie', serializedSessionCookie);
+    res.status(201).send(createdUser);
   } catch (err) {
     console.log(err.message, err.stack);
     res.sendStatus(500);
@@ -41,9 +55,20 @@ router.post('/login', loginConsecutiveLimiter, loginDayLimiter, async (req: Requ
     const userService = new UserService();
     const foundUser = await userService.findOne({ email });
     if (!foundUser) return res.sendStatus(404);
-    if (foundUser.status === 'inactive') return res.status(401).send("User is currently inactive");
     const passwordValidationResult = await userService.verifyPassword(password, foundUser.password);
     if (!passwordValidationResult) return res.status(400).send("Wrong password");
+    if (foundUser.status === 'inactive') return res.status(401).send("User is currently inactive");
+    const sessionToken = jwt.sign({
+      role: foundUser.role,
+      id: foundUser.id
+    }, process.env.ACCESS_TOKEN, { expiresIn: '7 days' });
+    const serializedSessionCookie = serialize('auth', sessionToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 24 * 7 // 1 week
+    });
+    res.setHeader('Set-Cookie', serializedSessionCookie);
     res.send(foundUser);
   } catch (err) {
     console.log(err.message, err.stack);
@@ -66,7 +91,7 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-router.delete('/', async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/', isAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id, status } = req.body;
     const userDto = new DeleteUserDto();

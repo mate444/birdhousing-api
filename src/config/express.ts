@@ -3,6 +3,7 @@ import express from 'express';
 import birdhouseRouter from '../birdhouse/controllers/birdhouse.controller';
 import userRouter from '../user/controllers/user.controller';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 
 const createServer = (): express.Application => {
   const app = express();
@@ -10,6 +11,7 @@ const createServer = (): express.Application => {
   app.use(express.urlencoded({ extended: true }));
   app.use(cors());
   app.use(helmet());
+  app.use(cookieParser());
   app.use('/birdhouse', birdhouseRouter);
   app.use('/user', userRouter);
   app.get('/', (req: express.Request, res: express.Response) => {
