@@ -22,9 +22,9 @@ export class UserService {
         where: { rolename: userRolename },
         select: { id: true }
       });
-      createdUser.role = clientRole.id;
+      createdUser.role = clientRole;
       const userId = (await this.entityManager.save(createdUser)).id;
-      const savedUser = await this.entityManager.find(User, {
+      const savedUser = await this.entityManager.findOne(User, {
         where: {
           id: userId
         },
@@ -45,7 +45,6 @@ export class UserService {
           id: true,
           email: true,
           lastname: true,
-          role: true,
           name: true,
           password: true
         },
