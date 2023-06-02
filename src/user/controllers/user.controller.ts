@@ -31,7 +31,8 @@ router.post('/register', async (req: Request, res: Response, next: NextFunction)
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 7 // 1 week
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+      path: '/'
     });
     res.setHeader('Set-Cookie', serializedSessionCookie);
     res.status(201).send(createdUser);
@@ -66,7 +67,8 @@ router.post('/login', loginConsecutiveLimiter, loginDayLimiter, async (req: Requ
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 7 // 1 week
+      maxAge: 60 * 60 * 24 * 7, // 1 week,
+      path: '/'
     });
     res.setHeader('Set-Cookie', serializedSessionCookie);
     res.send(foundUser);
@@ -145,6 +147,22 @@ router.put('/password', async (req: Request, res: Response, next: NextFunction) 
   } catch (err) {
     console.log(err.message, err.stack);
     res.sendStatus(500);
+  }
+});
+
+router.delete('/logout', (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const logOutCookie = serialize('auth', null, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 0,
+      path: '/'
+    });
+    res.setHeader('Set-Cookie', logOutCookie);
+    res.sendStatus(200);
+  } catch (err) {
+    console.log(err.message, err.stack);
   }
 });
 
