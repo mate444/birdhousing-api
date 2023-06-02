@@ -5,7 +5,7 @@ import { CreateUserDto, DeleteUserDto, UserLoginDto, UserUpdateDto, UserUpdatePa
 import { loginConsecutiveLimiter, loginDayLimiter } from "../../middleware/rateLimiters";
 import jwt from 'jsonwebtoken';
 import { serialize } from 'cookie';
-import { isAdmin } from "../../middleware/auth";
+import { isAdmin, isNotLoggedIn } from "../../middleware/auth";
 
 const router = Router();
 
@@ -78,7 +78,7 @@ router.post('/login', loginConsecutiveLimiter, loginDayLimiter, async (req: Requ
   }
 });
 
-router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/:id', isNotLoggedIn, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     const userService = new UserService();

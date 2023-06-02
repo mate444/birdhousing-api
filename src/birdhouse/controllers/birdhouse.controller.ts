@@ -2,12 +2,13 @@ import { Router, Request, NextFunction, Response } from "express";
 import { validate } from 'class-validator';
 import { CreateBirdhouseDto, DeleteBirdhouseDto, UpdateBirdhouseDto } from "../dtos/birdhouse.dto";
 import { BirdhouseService } from "../services/birdhouse.service";
+import { isAdmin } from "../../middleware/auth";
 import multer from 'multer';
 const upload = multer({ dest: 'uploads/' });
 
 const router = Router();
 
-router.post('/', upload.array('pictures', 9), async (req: Request, res: Response, next: NextFunction) => {
+router.post('/', isAdmin, upload.array('pictures', 9), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { colors, size, price, name, description, stock, styles } = req.body;
     const pictures = req.files;
@@ -48,7 +49,7 @@ router.get('/:id', async (req: Request, res: Response, next:NextFunction) => {
   }
 });
 
-router.delete('/', async (req:Request, res: Response, next: NextFunction) => {
+router.delete('/', isAdmin, async (req:Request, res: Response, next: NextFunction) => {
   try {
     const { birdhouseId, status } = req.body;
     const birdHouseDto = new DeleteBirdhouseDto();
@@ -68,7 +69,7 @@ router.delete('/', async (req:Request, res: Response, next: NextFunction) => {
   }
 });
 
-router.patch('/', async (req:Request, res:Response, next: NextFunction) => {
+router.patch('/', isAdmin, async (req:Request, res:Response, next: NextFunction) => {
   try {
     const { birdhouseId, colors, size, price, name, description, stock, styles } = req.body;
     const pictures = req.files;

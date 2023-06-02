@@ -25,4 +25,12 @@ export function isAdmin (req: Request, res: Response, next: NextFunction) {
   }
 }
 
-// If it becomes necessary, add auth middleware for client role
+export function isNotLoggedIn (req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!req.cookies.auth) return res.sendStatus(401);
+    next();
+  } catch (err) {
+    console.log(err);
+    res.sendStatus(500);
+  }
+}
