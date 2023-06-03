@@ -9,6 +9,15 @@ export class UserService {
   entityManager = Manager;
   async create (data: UserInterface) {
     try {
+      const existingUser = await this.entityManager.findOne(User, {
+        select: {
+          id: true
+        },
+        where: {
+          email: data.email
+        }
+      });
+      if (existingUser) return false;
       const saltRounds = 10;
       const userRolename = 'client';
       const hashedPassword = await bcrypt.hash(data.password, saltRounds);

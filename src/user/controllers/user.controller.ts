@@ -23,6 +23,7 @@ router.post('/register', async (req: Request, res: Response, next: NextFunction)
     }
     const userService = new UserService();
     const createdUser = await userService.create(req.body);
+    if (!createdUser) return res.status(400).send('User already exists');
     const sessionToken = jwt.sign({
       role: createdUser.role,
       id: createdUser.id
