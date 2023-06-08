@@ -20,7 +20,7 @@ export class User {
   @Column({ type: "varchar", length: 50 })
     country: string;
 
-  @OneToMany(() => User_address, (user_address) => user_address.id)
+  @OneToMany(() => User_address, (user_address) => user_address.user, { cascade: true })
     addresses: User_address[];
 
   @ManyToOne(() => User_role, (user_role) => user_role.id)

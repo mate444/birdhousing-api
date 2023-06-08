@@ -1,13 +1,13 @@
-import { UserInterface, UserStatusEnum } from "../interfaces/user.interface";
+import { IUserAddress, IUserInterface, UserStatusEnum } from "../interfaces/user.interface";
 import { Manager } from "../../database/connection";
 import { User } from "../entities/User.entity";
-import { User_permission } from "../entities/User_permission";
+import { User_address } from "../entities/User_address";
 import { User_role } from "../entities/User_role.entity";
 import bcrypt from 'bcrypt';
 
 export class UserService {
   entityManager = Manager;
-  async create (data: UserInterface) {
+  async create (data: IUserInterface) {
     try {
       const existingUser = await this.entityManager.findOne(User, {
         select: {
@@ -22,8 +22,7 @@ export class UserService {
       const userRolename = 'client';
       const hashedPassword = await bcrypt.hash(data.password, saltRounds);
       const createdUser = this.entityManager.create(User, {
-        name: data.name,
-        lastname: data.lastname,
+        country: data.country,
         email: data.email,
         password: hashedPassword
       });
@@ -53,11 +52,10 @@ export class UserService {
         select: {
           id: true,
           email: true,
-          lastname: true,
-          name: true,
+          country: true,
           password: true
         },
-        relations: ['role']
+        relations: ['role', 'address']
       });
       return foundUser;
     } catch (err) {
@@ -89,11 +87,10 @@ export class UserService {
     }
   }
 
-  async updateData (data: UserInterface) {
+  async updateData (data: IUserInterface) {
     try {
       await this.entityManager.update(User, { id: data.id }, {
-        name: data.name,
-        lastname: data.lastname
+        country: data.country
       });
       return data;
     } catch (err) {
@@ -107,6 +104,38 @@ export class UserService {
       const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
       await this.entityManager.update(User, { email }, { password: hashedPassword });
       return "Updated";
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
+
+  async createAddress (data: IUserAddress) {
+    try {
+      const createdAddress = this.entityManager.create(User_address, {
+        address: data.address,
+        city: data.city,
+        country: data.country,
+        lastname: data.lastname,
+        name: data.name,
+        phoneNumber: data.phoneNumber,
+        postalCode: data.postalCode
+      });
+      const foundUser = await this.entityManager.findOne(User, {
+        where: {
+          id: data.userId
+        },
+        select: {
+          id: true,
+          addresses: true
+        },
+        relations: {
+          addresses: true
+        }
+      });
+      if (!foundUser) return false;
+      foundUser.addresses.push(createdAddress);
+      await this.entityManager.save(foundUser);
+      return data;
     } catch (err) {
       throw new Error(err);
     }
