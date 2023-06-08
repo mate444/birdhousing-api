@@ -1,6 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, JoinColumn, ManyToOne } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, JoinColumn, ManyToOne, OneToMany } from "typeorm";
 import { UserStatusEnum } from "../interfaces/user.interface";
 import { User_role } from "./User_role.entity";
+import { User_address } from "./User_address";
 
 @Entity()
 export class User {
@@ -16,11 +17,11 @@ export class User {
   @Column({ type: 'enum', enum: UserStatusEnum, default: 'active' })
     status: UserStatusEnum;
 
-  @Column({ type: 'varchar', length: 30 })
-    name: string;
+  @Column({ type: "varchar", length: 50 })
+    country: string;
 
-  @Column({ type: 'varchar', length: 30 })
-    lastname: string;
+  @OneToMany(() => User_address, (user_address) => user_address.id)
+    addresses: User_address[];
 
   @ManyToOne(() => User_role, (user_role) => user_role.id)
   @JoinColumn()
