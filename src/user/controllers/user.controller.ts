@@ -1,7 +1,14 @@
 import { Router, Request, NextFunction, Response } from "express";
 import { validate } from 'class-validator';
 import { UserService } from "../services/user.service";
-import { CreateUserDto, DeleteUserDto, UserLoginDto, UserUpdateDto, UserUpdatePasswordDto } from "../dtos/user.dto";
+import {
+  CreateUserDto,
+  DeleteUserDto,
+  UserLoginDto,
+  UserAddressCreateDto,
+  UserUpdatePasswordDto,
+  UserUpdateDto
+} from "../dtos/user.dto";
 import { loginConsecutiveLimiter, loginDayLimiter } from "../../middleware/rateLimiters";
 import jwt from 'jsonwebtoken';
 import { serialize } from 'cookie';
@@ -11,11 +18,10 @@ const router = Router();
 
 router.post('/register', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { email, name, lastname, password } = req.body;
+    const { email, country, password } = req.body;
     const userDto = new CreateUserDto();
     userDto.email = email;
-    userDto.lastname = lastname;
-    userDto.name = name;
+    userDto.country = country;
     userDto.password = password;
     const errors = await validate(userDto);
     if (errors.length) {
@@ -112,11 +118,10 @@ router.delete('/', isAdmin, async (req: Request, res: Response, next: NextFuncti
 
 router.patch('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id, lastname, name } = req.body;
+    const { id, country } = req.body;
     const updateUserDto = new UserUpdateDto();
     updateUserDto.id = id;
-    updateUserDto.lastname = lastname;
-    updateUserDto.name = name;
+    updateUserDto.country = country;
     const errors = await validate(updateUserDto);
     if (errors.length) {
       return res.status(400).send(errors);
@@ -164,6 +169,34 @@ router.delete('/logout', (req: Request, res: Response, next: NextFunction) => {
     res.sendStatus(200);
   } catch (err) {
     console.log(err.message, err.stack);
+    res.sendStatus(500);
+  }
+});
+
+router.post('/address', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { userId, name, lastname, address, city, postalCode, phoneNumber, country } = req.body;
+    const userDto = new UserAddressCreateDto();
+    userDto.address = address;
+    userDto.city = city;
+    userDto.country = country;
+    userDto.lastname = lastname;
+    userDto.name = name;
+    userDto.phoneNumber = phoneNumber;
+    userDto.postalCode = postalCode;
+    userDto.userId = userId;
+
+    const errors = await validate(userDto);
+    if (errors.length) {
+      return res.status(400).send(errors);
+    }
+    const userService = new UserService();
+    const userAddressCreated = await userService.createAddress(req.body);
+    if (!userAddressCreated) return res.sendStatus(404);
+    res.send(userAddressCreated);
+  } catch (err) {
+    console.log(err.message, err.stack);
+    res.sendStatus(500);
   }
 });
 
