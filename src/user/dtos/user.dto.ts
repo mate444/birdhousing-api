@@ -6,6 +6,7 @@ import {
   IsStrongPassword,
   IsUUID,
   IsEnum,
+  IsNumber,
   IsPhoneNumber
 } from "class-validator";
 import { IsCountry } from "../../common/validateCountry";
@@ -129,4 +130,9 @@ export class UserAddressCreateDto extends BaseUserAddressDto {
     @IsString()
     @IsUUID(4, { message: 'User id must be a V4 UUID' })
       userId: string;
+}
+
+export class UserAddressUpdateDto extends BaseUserAddressDto {
+  @IsNumber({}, { message: 'User Address id must be a number' })
+    id: number;
 }

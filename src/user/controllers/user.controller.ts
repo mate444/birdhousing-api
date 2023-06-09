@@ -7,7 +7,8 @@ import {
   UserLoginDto,
   UserAddressCreateDto,
   UserUpdatePasswordDto,
-  UserUpdateDto
+  UserUpdateDto,
+  UserAddressUpdateDto
 } from "../dtos/user.dto";
 import { loginConsecutiveLimiter, loginDayLimiter } from "../../middleware/rateLimiters";
 import jwt from 'jsonwebtoken';
@@ -176,17 +177,17 @@ router.delete('/logout', (req: Request, res: Response, next: NextFunction) => {
 router.post('/address', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { userId, name, lastname, address, city, postalCode, phoneNumber, country } = req.body;
-    const userDto = new UserAddressCreateDto();
-    userDto.address = address;
-    userDto.city = city;
-    userDto.country = country;
-    userDto.lastname = lastname;
-    userDto.name = name;
-    userDto.phoneNumber = phoneNumber;
-    userDto.postalCode = postalCode;
-    userDto.userId = userId;
+    const userAddressDto = new UserAddressCreateDto();
+    userAddressDto.address = address;
+    userAddressDto.city = city;
+    userAddressDto.country = country;
+    userAddressDto.lastname = lastname;
+    userAddressDto.name = name;
+    userAddressDto.phoneNumber = phoneNumber;
+    userAddressDto.postalCode = postalCode;
+    userAddressDto.userId = userId;
 
-    const errors = await validate(userDto);
+    const errors = await validate(userAddressDto);
     if (errors.length) {
       return res.status(400).send(errors);
     }
@@ -194,6 +195,34 @@ router.post('/address', async (req: Request, res: Response, next: NextFunction) 
     const userAddressCreated = await userService.createAddress(req.body);
     if (!userAddressCreated) return res.sendStatus(404);
     res.send(userAddressCreated);
+  } catch (err) {
+    console.log(err.message, err.stack);
+    res.sendStatus(500);
+  }
+});
+
+router.patch('/address', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id, name, lastname, address, city, postalCode, phoneNumber, country } = req.body;
+    const userAddressDto = new UserAddressUpdateDto();
+    userAddressDto.address = address;
+    userAddressDto.city = city;
+    userAddressDto.country = country;
+    userAddressDto.lastname = lastname;
+    userAddressDto.name = name;
+    userAddressDto.phoneNumber = phoneNumber;
+    userAddressDto.postalCode = postalCode;
+    userAddressDto.id = id;
+
+    const errors = await validate(userAddressDto);
+    if (errors.length) {
+      return res.status(400).send(errors);
+    }
+
+    const userService = new UserService();
+    const updatedUserAddress = await userService.updateAddress(req.body);
+    if (!updatedUserAddress) return res.sendStatus(404);
+    res.send(updatedUserAddress);
   } catch (err) {
     console.log(err.message, err.stack);
     res.sendStatus(500);
