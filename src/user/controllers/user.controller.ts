@@ -117,7 +117,7 @@ router.delete('/', isAdmin, async (req: Request, res: Response, next: NextFuncti
   }
 });
 
-router.patch('/', async (req: Request, res: Response, next: NextFunction) => {
+router.patch('/', isNotLoggedIn, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id, country } = req.body;
     const updateUserDto = new UserUpdateDto();
@@ -157,7 +157,7 @@ router.put('/password', async (req: Request, res: Response, next: NextFunction) 
   }
 });
 
-router.delete('/logout', (req: Request, res: Response, next: NextFunction) => {
+router.delete('/logout', isNotLoggedIn, (req: Request, res: Response, next: NextFunction) => {
   try {
     const logOutCookie = serialize('auth', null, {
       httpOnly: true,
@@ -174,7 +174,7 @@ router.delete('/logout', (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-router.post('/address', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/address', isNotLoggedIn, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { userId, name, lastname, address, city, postalCode, phoneNumber, country } = req.body;
     const userAddressDto = new UserAddressCreateDto();
@@ -201,7 +201,7 @@ router.post('/address', async (req: Request, res: Response, next: NextFunction) 
   }
 });
 
-router.patch('/address', async (req: Request, res: Response, next: NextFunction) => {
+router.patch('/address', isNotLoggedIn, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id, name, lastname, address, city, postalCode, phoneNumber, country } = req.body;
     const userAddressDto = new UserAddressUpdateDto();
@@ -223,6 +223,18 @@ router.patch('/address', async (req: Request, res: Response, next: NextFunction)
     const updatedUserAddress = await userService.updateAddress(req.body);
     if (!updatedUserAddress) return res.sendStatus(404);
     res.send(updatedUserAddress);
+  } catch (err) {
+    console.log(err.message, err.stack);
+    res.sendStatus(500);
+  }
+});
+
+router.get('/:id/address', isNotLoggedIn, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const userService = new UserService();
+    const foundAddresses = await userService.findAddresses(id);
+    res.send(foundAddresses);
   } catch (err) {
     console.log(err.message, err.stack);
     res.sendStatus(500);
