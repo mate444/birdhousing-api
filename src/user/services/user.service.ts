@@ -55,7 +55,7 @@ export class UserService {
           country: true,
           password: true
         },
-        relations: ['role', 'address']
+        relations: ['role', 'addresses']
       });
       return foundUser;
     } catch (err) {
@@ -136,6 +136,39 @@ export class UserService {
       foundUser.addresses.push(createdAddress);
       await this.entityManager.save(foundUser);
       return data;
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
+
+  async updateAddress (data: IUserAddress) {
+    try {
+      const modifiedUserAddress = await this.entityManager.update(User_address, { id: data.id }, {
+        address: data.address,
+        city: data.city,
+        country: data.country,
+        lastname: data.lastname,
+        name: data.name,
+        phoneNumber: data.phoneNumber,
+        postalCode: data.postalCode
+      });
+      if (modifiedUserAddress.affected === 0) return false;
+      return data;
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
+
+  async findAddresses (userId: string) {
+    try {
+      const foundUserAdresses = await this.entityManager.find(User_address, {
+        where: {
+          user: {
+            id: userId
+          }
+        }
+      });
+      return foundUserAdresses;
     } catch (err) {
       throw new Error(err);
     }
