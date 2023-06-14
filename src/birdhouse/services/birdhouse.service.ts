@@ -3,14 +3,13 @@ import fsPromise from 'fs/promises';
 import { Manager } from '../../database/connection';
 import { Birdhouse } from '../entities/Birdhouse.entity';
 import { Birdhouse_style } from '../../birdhouse/entities/Birdhouse_style.entity';
-import { Birdhouse_color } from '../entities/Birdhouse_color.entity';
 import { Birdhouse_picture } from '../entities/Birdhouse_picture.entity';
 import { v4 as uuid } from 'uuid';
 import { ILike } from 'typeorm';
 
 export class BirdhouseService {
   entityManager = Manager;
-  async create (data: BirdhouseInterface) {
+  async create (data: any) {
     try {
       const birdhouseId = uuid();
       const entitesToSave = [];
@@ -22,7 +21,6 @@ export class BirdhouseService {
         stock: data.stock,
         size: data.size,
         pictures: [],
-        colors: [],
         styles: []
       });
       entitesToSave.push(createdBirdhouse);
@@ -44,13 +42,6 @@ export class BirdhouseService {
         createdBirdhouse.styles.push(createdStyle);
         entitesToSave.push(createdStyle);
       }
-      for (let i = 0; i < data.colors.length; i += 1) {
-        const createdColor = this.entityManager.create(Birdhouse_color, {
-          color: data.colors[i]
-        });
-        entitesToSave.push(createdColor);
-        createdBirdhouse.colors.push(createdColor);
-      }
       await this.entityManager.save(entitesToSave);
       return "Created";
     } catch (err: any) {
@@ -66,7 +57,6 @@ export class BirdhouseService {
         },
         relations: {
           pictures: true,
-          colors: true,
           styles: true
         }
       });
@@ -112,66 +102,46 @@ export class BirdhouseService {
           style: data.styles[i]
         });
       }
-      await this.entityManager.delete(Birdhouse_color, { birdhouse: data.birdhouseId });
-      for (let i = 0; i < data.colors.length; i += 1) {
-        this.entityManager.save(Birdhouse_color, {
-          color: data.colors[i]
-        });
-      }
       return data;
     } catch (err) {
       throw new Error(err);
     }
   }
 
-  async getAll (search: string | undefined, sort: string | undefined, page: number) {
+  async getAll (search: any, sort: any, page: number) {
     try {
       const numItems = 10;
       const totalCount = await this.entityManager.count(Birdhouse);
       const totalPages = Math.ceil(totalCount / numItems);
-      if (!sort) {
-        const foundBirdhouses = await this.entityManager.find(Birdhouse, {
-          select: {
-            name: true,
-            price: true,
-            stock: true,
-            size: true,
-            styles: true,
-            colors: true,
-            pictures: true
-          },
-          where: {
-            name: ILike(`%${search}%`)
-          },
-          skip: (page - 1) * numItems,
-          take: numItems
-        });
-        return { data: foundBirdhouses, totalPages };
+      const findOptions = {
+        select: {
+          birdhouseId: true,
+          name: true,
+          price: true,
+          stock: true,
+          size: true,
+          styles: true,
+          pictures: true
+        },
+        relations: ['styles', 'pictures'],
+        skip: (page - 1) * numItems,
+        take: numItems
+      };
+      if (search) {
+        findOptions["where"] = {
+          name: ILike(`%${search}%`)
+        };
       }
-
-      if (sort.length > 0) {
+      if (sort && sort.length > 0) {
         const sortType = this.getSortType(sort);
-        const foundBirdhouses = await this.entityManager.find(Birdhouse, {
-          select: {
-            name: true,
-            price: true,
-            stock: true,
-            size: true,
-            styles: true,
-            colors: true,
-            pictures: true
-          },
-          where: {
-            name: ILike(`%${search}%`)
-          },
-          skip: (page - 1) * numItems,
-          take: numItems,
-          order: {
-            [sortType.field]: sortType.sortType
-          }
-        });
-        return { data: foundBirdhouses, totalPages };
+        findOptions["order"] = {
+          [sortType.field]: sortType.sortType
+        };
       }
+      const foundBirdhouses = await this.entityManager.find(Birdhouse, findOptions);
+      foundBirdhouses.forEach((b) => {
+      });
+      return { data: foundBirdhouses, totalPages };
     } catch (err) {
       throw new Error(err);
     }
