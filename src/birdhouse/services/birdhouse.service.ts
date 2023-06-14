@@ -1,15 +1,18 @@
 import { BirdhouseInterface, BirdhouseStatusEnum } from '../interfaces/birdhouse.interface';
-import fsPromise from 'fs/promises';
 import { Manager } from '../../database/connection';
 import { Birdhouse } from '../entities/Birdhouse.entity';
 import { Birdhouse_style } from '../../birdhouse/entities/Birdhouse_style.entity';
 import { Birdhouse_picture } from '../entities/Birdhouse_picture.entity';
 import { v4 as uuid } from 'uuid';
 import { ILike } from 'typeorm';
-
+import { getStorage, ref, getDownloadURL, uploadBytesResumable } from 'firebase/storage';
+import { firebaseConfig } from '../../config/firebase';
+import { initializeApp } from 'firebase/app';
+initializeApp(firebaseConfig);
+const storage = getStorage();
 export class BirdhouseService {
   entityManager = Manager;
-  async create (data: any) {
+  async create (data: BirdhouseInterface) {
     try {
       const birdhouseId = uuid();
       const entitesToSave = [];
@@ -24,16 +27,20 @@ export class BirdhouseService {
         styles: []
       });
       entitesToSave.push(createdBirdhouse);
-      if (data.pictures) {
-        for (let i = 0; i < data.pictures.length; i += 1) {
-          const file = await fsPromise.readFile(data.pictures[i].path, 'binary');
-          const createdPicture = this.entityManager.create(Birdhouse_picture, {
-            picture: file
-          });
-          createdBirdhouse.pictures.push(createdPicture);
-          entitesToSave.push(createdPicture);
-          await fsPromise.unlink(data.pictures[i].path);
-        }
+      for (let i = 0; i < data.pictures.length; i += 1) {
+        const picture = data.pictures[i];
+        // Firebase image upload
+        const storageRef = ref(storage, `files/${picture.originalname}/${uuid()}`);
+        const metadata = {
+          contentType: picture.mimetype
+        };
+        const snapshot = await uploadBytesResumable(storageRef, picture.buffer, metadata);
+        const downloadUrl = await getDownloadURL(snapshot.ref);
+        const createdPicture = this.entityManager.create(Birdhouse_picture, {
+          picture: downloadUrl
+        });
+        createdBirdhouse.pictures.push(createdPicture);
+        entitesToSave.push(createdPicture);
       }
       for (let i = 0; i < data.styles.length; i += 1) {
         const createdStyle = this.entityManager.create(Birdhouse_style, {

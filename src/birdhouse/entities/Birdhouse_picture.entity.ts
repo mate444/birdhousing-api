@@ -7,7 +7,7 @@ export class Birdhouse_picture {
   @PrimaryGeneratedColumn('increment')
     id: string;
 
-  @Column('blob', { nullable: true })
+  @Column('varchar', { length: 255 })
     picture: File;
 
   @ManyToOne(() => Birdhouse, (birdhouse) => birdhouse.pictures)
