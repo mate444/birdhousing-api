@@ -97,17 +97,18 @@ export class BirdhouseService {
         description: data.description,
         stock: data.stock
       });
-      await this.entityManager.delete(Birdhouse_picture, { birdhouse: data.birdhouseId });
-      for (let i = 0; i < data.pictures.length; i += 1) {
-        this.entityManager.save(Birdhouse_picture, {
-          picture: data.pictures[i]
-        });
-      }
+      const foundBirdhouse = await this.entityManager.findOne(Birdhouse, {
+        where: {
+          birdhouseId: data.birdhouseId
+        }
+      });
       await this.entityManager.delete(Birdhouse_style, { birdhouse: data.birdhouseId });
       for (let i = 0; i < data.styles.length; i += 1) {
-        this.entityManager.save(Birdhouse_style, {
+        const updatedStyle = this.entityManager.create(Birdhouse_style, {
           style: data.styles[i]
         });
+        updatedStyle.birdhouse = foundBirdhouse;
+        await this.entityManager.save(updatedStyle);
       }
       return data;
     } catch (err) {
@@ -121,15 +122,6 @@ export class BirdhouseService {
       const totalCount = await this.entityManager.count(Birdhouse);
       const totalPages = Math.ceil(totalCount / numItems);
       const findOptions = {
-        select: {
-          birdhouseId: true,
-          name: true,
-          price: true,
-          stock: true,
-          size: true,
-          styles: true,
-          pictures: true
-        },
         relations: ['styles', 'pictures'],
         skip: (page - 1) * numItems,
         take: numItems

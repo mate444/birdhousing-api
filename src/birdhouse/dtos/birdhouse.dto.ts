@@ -6,12 +6,12 @@ import {
   IsArray,
   IsNumber,
   IsUUID,
-  IsEnum
+  IsEnum,
+  IsUrl
 } from "class-validator";
 import { isFile } from "../../common/validateFile";
 import { Express } from 'express';
 import { BirdhouseStatusEnum } from "../interfaces/birdhouse.interface";
-import { Transform } from "class-transformer";
 
 export class CreateBirdhouseDto {
   @IsString()
@@ -88,20 +88,9 @@ export class UpdateBirdhouseDto {
       size: number;
 
     @IsArray({ message: 'Birdhouse pictures must be inside an array' })
-    @isFile({
-      mime: ['image/jpeg', 'image/jpg', 'image/png']
-    }, {
-      each: true, message: 'Birdhouse picture must be [image/jpeg, image/jpg, image/png]'
-    })
-      pictures: Express.Multer.File[] | { [fieldname: string]: Express.Multer.File[] };
+    @IsUrl({}, { message: 'Birdhouse picture must be a valid URL', each: true })
+      pictures: string[];
 
-    @IsArray()
-    @IsString({ each: true, message: 'Birdhouse color must be a string' })
-    @MinLength(1, { each: true, message: 'Birdhouse color is too short' })
-    @MaxLength(20, { each: true, message: 'Birdhouse color is too long' })
-      colors: string[];
-
-    @IsArray()
     @IsString({ each: true, message: 'Birdhouse style must be a string' })
     @MinLength(1, { each: true, message: 'Birdhouse style is too short' })
     @MaxLength(45, { each: true, message: 'Birdhouse style is too long' })

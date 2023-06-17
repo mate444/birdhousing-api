@@ -4,7 +4,7 @@ import { CreateBirdhouseDto, DeleteBirdhouseDto, UpdateBirdhouseDto } from "../d
 import { BirdhouseService } from "../services/birdhouse.service";
 import { isAdmin } from "../../middleware/auth";
 import multer from 'multer';
-const upload = multer({ dest: 'uploads/' });
+const upload = multer({ storage: multer.memoryStorage() });
 
 const router = Router();
 
@@ -25,7 +25,7 @@ router.post('/', isAdmin, upload.array('pictures', 9), async (req: Request, res:
       return res.status(400).send(errors);
     }
     const birdhouseService = new BirdhouseService();
-    const result = await birdhouseService.create(req.body);
+    const result = await birdhouseService.create({ ...req.body, pictures });
     res.status(201).send(result);
   } catch (err) {
     console.log(err.message, err.stack);
@@ -70,8 +70,7 @@ router.delete('/', isAdmin, async (req:Request, res: Response, next: NextFunctio
 
 router.patch('/', isAdmin, async (req:Request, res:Response, next: NextFunction) => {
   try {
-    const { birdhouseId, size, price, name, description, stock, styles } = req.body;
-    const pictures = req.files;
+    const { birdhouseId, size, price, name, description, stock, styles, pictures } = req.body;
     const birdhouseDto = new UpdateBirdhouseDto();
     birdhouseDto.birdhouseId = birdhouseId;
     birdhouseDto.size = size;
