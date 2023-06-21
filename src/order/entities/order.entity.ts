@@ -1,4 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, ManyToMany, JoinTable } from "typeorm";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  ManyToMany,
+  JoinTable,
+  CreateDateColumn,
+  UpdateDateColumn
+} from "typeorm";
 import { OrderStatusEnum } from "../interfaces/order.interface";
 import { Birdhouse } from '../../birdhouse/entities/Birdhouse.entity';
 import { User } from "../../user/entities/User.entity";
@@ -14,11 +23,14 @@ export class Order {
   @Column({ type: 'double' })
     price: number;
 
-  @Column({ type: 'datetime' })
+  @CreateDateColumn({ type: 'datetime' })
     createdAt: string;
 
-  @Column({ type: 'datetime' })
+  @UpdateDateColumn()
     updatedAt: string;
+
+  @Column({ type: 'date', nullable: true })
+    calculatedArrival: string;
 
   @ManyToMany(() => Birdhouse, { cascade: true, eager: true })
   @JoinTable()
