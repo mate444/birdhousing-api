@@ -1,8 +1,9 @@
 import { Birdhouse } from "../../birdhouse/entities/Birdhouse.entity";
 import { Manager } from "../../database/connection";
 import { Order } from "../entities/order.entity";
-import { IOrder } from "../interfaces/order.interface";
+import { IOrder, OrderStatusEnum } from "../interfaces/order.interface";
 import { User } from "../../user/entities/User.entity";
+import { ILike } from "typeorm";
 
 export class OrderService {
   entityManager = Manager;
@@ -34,6 +35,20 @@ export class OrderService {
       createdOrder.user = foundUser;
       await this.entityManager.save(createdOrder);
       return "Created";
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
+
+  async updateStatus (data: { id: string, status: OrderStatusEnum }) {
+    try {
+      const updatedOrder = await this.entityManager.update(Order, {
+        id: data.id
+      }, {
+        status: data.status
+      });
+      if (updatedOrder.affected < 1) return "Not found";
+      return "Updated";
     } catch (err) {
       throw new Error(err);
     }
