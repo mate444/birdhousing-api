@@ -50,4 +50,19 @@ router.patch('/status', async (req: Request, res: Response, next: NextFunction) 
   }
 });
 
+router.get('/', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    let { page, search } = req.query;
+    if (page === 'undefined') page = undefined;
+    if (search === 'undefined') search = undefined;
+    if (!page) return res.status(400).send('Page is required');
+    const orderService = new OrderService();
+    const orders = await orderService.getAll(search, parseInt(`${page}`));
+    res.send(orders);
+  } catch (err) {
+    console.log(err.message, err.stack);
+    res.sendStatus(500);
+  }
+});
+
 export default router;
