@@ -53,4 +53,37 @@ export class OrderService {
       throw new Error(err);
     }
   }
+
+  async getAll (search: any, page: number) {
+    try {
+      const numItems = 10;
+      const totalCount = await this.entityManager.count(Order);
+      const totalPages = Math.ceil(totalCount / numItems);
+      const findOptions = {
+        relations: ['user'],
+        select: {
+          id: true,
+          status: true,
+          price: true,
+          user: {
+            email: true
+          },
+          updatedAt: true
+        },
+        skip: (page - 1) * numItems,
+        take: numItems
+      };
+      if (search) {
+        findOptions["where"] = {
+          user: {
+            email: ILike(`%${search}%`)
+          }
+        };
+      }
+      const orders = await this.entityManager.find(Order, findOptions);
+      return { data: orders, totalPages };
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
 };
