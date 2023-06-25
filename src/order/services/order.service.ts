@@ -12,31 +12,30 @@ export class OrderService {
   });
 
   entityManager = Manager;
-  async create (data: IOrder) {
+  async create (data: any) {
     try {
+      const paymentIntent = await this.stripe.paymentIntents.retrieve(data.data.object.id);
+      const { metadata: { birdhouses, price, userId } } = paymentIntent;
       const orderBirdhouses = [];
       const createdOrder = this.entityManager.create(Order, {
-        price: data.price,
+        price: parseInt(price),
         calculatedArrival: null
       });
-      for (const b of data.birdhouses) {
+      for (const b of JSON.parse(birdhouses)) {
         const foundBirdhouse = await this.entityManager.findOne(Birdhouse, {
           where: {
             birdhouseId: b.id
           }
         });
-        if (!foundBirdhouse) return "Not found";
-        if (foundBirdhouse.stock < b.amount) return "Not enough stock";
         foundBirdhouse.stock -= b.amount;
         orderBirdhouses.push(foundBirdhouse);
       };
       createdOrder.birdhouses = orderBirdhouses;
       const foundUser = await this.entityManager.findOne(User, {
         where: {
-          id: data.userId
+          id: userId
         }
       });
-      if (!foundUser) return "Not found";
       createdOrder.user = foundUser;
       await this.entityManager.save(createdOrder);
       return "Created";
