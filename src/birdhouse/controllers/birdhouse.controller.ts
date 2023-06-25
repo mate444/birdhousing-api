@@ -3,6 +3,7 @@ import { validate } from 'class-validator';
 import { CreateBirdhouseDto, DeleteBirdhouseDto, UpdateBirdhouseDto } from "../dtos/birdhouse.dto";
 import { BirdhouseService } from "../services/birdhouse.service";
 import { isAdmin } from "../../middleware/auth";
+import { BirdhouseStatusEnum } from "../interfaces/birdhouse.interface";
 import multer from 'multer';
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -50,7 +51,8 @@ router.get('/:id', async (req: Request, res: Response, next:NextFunction) => {
 
 router.delete('/', isAdmin, async (req:Request, res: Response, next: NextFunction) => {
   try {
-    const { birdhouseId, status } = req.body;
+    const birdhouseId = `${req.query.birdhouseId}`;
+    const status = req.query.status === "active" ? BirdhouseStatusEnum.active : BirdhouseStatusEnum.inactive;
     const birdHouseDto = new DeleteBirdhouseDto();
     birdHouseDto.birdhouseId = birdhouseId;
     birdHouseDto.status = status;
