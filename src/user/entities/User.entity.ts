@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, JoinColumn, ManyToOne, OneToMan
 import { UserStatusEnum } from "../interfaces/user.interface";
 import { User_role } from "./User_role.entity";
 import { User_address } from "./User_address";
+import { Order } from "../../order/entities/order.entity";
 
 @Entity()
 export class User {
@@ -26,4 +27,7 @@ export class User {
   @ManyToOne(() => User_role, (user_role) => user_role.id)
   @JoinColumn()
     role: User_role;
+
+  @OneToMany(() => Order, (order) => order.user)
+    orders: Order[];
 }

@@ -241,4 +241,16 @@ router.get('/:id/address', isNotLoggedIn, async (req: Request, res: Response, ne
   }
 });
 
+router.get('/:id/orders', isNotLoggedIn, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const userService = new UserService();
+    const foundOrders = await userService.findOrders(id);
+    res.send(foundOrders);
+  } catch (err) {
+    console.log(err.message, err.stack);
+    res.sendStatus(500);
+  }
+});
+
 export default router;

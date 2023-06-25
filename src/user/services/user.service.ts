@@ -36,7 +36,14 @@ export class UserService {
         where: {
           id: userId
         },
-        relations: ['role']
+        select: {
+          email: true,
+          id: true,
+          country: true,
+          addresses: true,
+          status: true
+        },
+        relations: ['role', 'addresses']
       });
       return savedUser;
     } catch (err) {
@@ -169,6 +176,22 @@ export class UserService {
         }
       });
       return foundUserAdresses;
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
+
+  async findOrders (id: string) {
+    try {
+      const foundUserOrders = await this.entityManager.find(User, {
+        where: {
+          id
+        },
+        select: {
+          orders: true
+        }
+      });
+      return foundUserOrders;
     } catch (err) {
       throw new Error(err);
     }
