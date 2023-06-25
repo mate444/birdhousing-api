@@ -3,10 +3,11 @@ import { DataSource } from 'typeorm';
 import { Birdhouse } from '../birdhouse/entities/Birdhouse.entity';
 import { Birdhouse_picture } from '../birdhouse/entities/Birdhouse_picture.entity';
 import { Birdhouse_style } from '../birdhouse/entities/Birdhouse_style.entity';
-import { Birdhouse_color } from '../birdhouse/entities/Birdhouse_color.entity';
 import { User } from '../user/entities/User.entity';
 import { User_role } from '../user/entities/User_role.entity';
 import { User_permission } from '../user/entities/User_permission';
+import { User_address } from '../user/entities/User_address';
+import { Order } from '../order/entities/order.entity';
 
 dotenv.config();
 
@@ -19,14 +20,15 @@ const AppDataSource = new DataSource({
   database: process.env.DB_NAME,
   entities: [
     Birdhouse,
-    Birdhouse_color,
     Birdhouse_picture,
     Birdhouse_style,
+    Order,
     User,
+    User_address,
     User_permission,
     User_role
   ],
-  synchronize: true,
+  synchronize: false,
   logging: false
 });
 

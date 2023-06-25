@@ -25,6 +25,7 @@
         "quote-props": ["off", { "unnecesary": false}],
         "no-tabs": ["off"],
         "no-mixed-spaces-and-tabs": ["off"],
-        "no-useless-constructor": "off"
+        "no-useless-constructor": "off",
+        "dot-notation": "off"
     }
 }

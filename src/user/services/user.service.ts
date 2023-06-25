@@ -1,20 +1,28 @@
-import { UserInterface, UserStatusEnum } from "../interfaces/user.interface";
+import { IUserAddress, IUserInterface, UserStatusEnum } from "../interfaces/user.interface";
 import { Manager } from "../../database/connection";
 import { User } from "../entities/User.entity";
-import { User_permission } from "../entities/User_permission";
+import { User_address } from "../entities/User_address";
 import { User_role } from "../entities/User_role.entity";
 import bcrypt from 'bcrypt';
 
 export class UserService {
   entityManager = Manager;
-  async create (data: UserInterface) {
+  async create (data: IUserInterface) {
     try {
+      const existingUser = await this.entityManager.findOne(User, {
+        select: {
+          id: true
+        },
+        where: {
+          email: data.email
+        }
+      });
+      if (existingUser) return false;
       const saltRounds = 10;
       const userRolename = 'client';
       const hashedPassword = await bcrypt.hash(data.password, saltRounds);
       const createdUser = this.entityManager.create(User, {
-        name: data.name,
-        lastname: data.lastname,
+        country: data.country,
         email: data.email,
         password: hashedPassword
       });
@@ -28,7 +36,14 @@ export class UserService {
         where: {
           id: userId
         },
-        relations: ['role']
+        select: {
+          email: true,
+          id: true,
+          country: true,
+          addresses: true,
+          status: true
+        },
+        relations: ['role', 'addresses']
       });
       return savedUser;
     } catch (err) {
@@ -44,11 +59,10 @@ export class UserService {
         select: {
           id: true,
           email: true,
-          lastname: true,
-          name: true,
+          country: true,
           password: true
         },
-        relations: ['role']
+        relations: ['role', 'addresses']
       });
       return foundUser;
     } catch (err) {
@@ -80,11 +94,10 @@ export class UserService {
     }
   }
 
-  async updateData (data: UserInterface) {
+  async updateData (data: IUserInterface) {
     try {
       await this.entityManager.update(User, { id: data.id }, {
-        name: data.name,
-        lastname: data.lastname
+        country: data.country
       });
       return data;
     } catch (err) {
@@ -98,6 +111,87 @@ export class UserService {
       const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
       await this.entityManager.update(User, { email }, { password: hashedPassword });
       return "Updated";
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
+
+  async createAddress (data: IUserAddress) {
+    try {
+      const createdAddress = this.entityManager.create(User_address, {
+        address: data.address,
+        city: data.city,
+        country: data.country,
+        lastname: data.lastname,
+        name: data.name,
+        phoneNumber: data.phoneNumber,
+        postalCode: data.postalCode
+      });
+      const foundUser = await this.entityManager.findOne(User, {
+        where: {
+          id: data.userId
+        },
+        select: {
+          id: true,
+          addresses: true
+        },
+        relations: {
+          addresses: true
+        }
+      });
+      if (!foundUser) return false;
+      foundUser.addresses.push(createdAddress);
+      await this.entityManager.save(foundUser);
+      return data;
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
+
+  async updateAddress (data: IUserAddress) {
+    try {
+      const modifiedUserAddress = await this.entityManager.update(User_address, { id: data.id }, {
+        address: data.address,
+        city: data.city,
+        country: data.country,
+        lastname: data.lastname,
+        name: data.name,
+        phoneNumber: data.phoneNumber,
+        postalCode: data.postalCode
+      });
+      if (modifiedUserAddress.affected === 0) return false;
+      return data;
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
+
+  async findAddresses (userId: string) {
+    try {
+      const foundUserAdresses = await this.entityManager.find(User_address, {
+        where: {
+          user: {
+            id: userId
+          }
+        }
+      });
+      return foundUserAdresses;
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
+
+  async findOrders (id: string) {
+    try {
+      const foundUserOrders = await this.entityManager.find(User, {
+        where: {
+          id
+        },
+        select: {
+          orders: true
+        }
+      });
+      return foundUserOrders;
     } catch (err) {
       throw new Error(err);
     }

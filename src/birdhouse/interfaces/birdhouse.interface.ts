@@ -12,7 +12,6 @@ export interface BirdhouseInterface {
   stock: number;
   status: BirdhouseStatusEnum;
   size: number;
-  colors: string[];
   pictures: Express.Multer.File[] | undefined;
   styles: string[];
 }

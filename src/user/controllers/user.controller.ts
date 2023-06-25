@@ -1,7 +1,15 @@
 import { Router, Request, NextFunction, Response } from "express";
 import { validate } from 'class-validator';
 import { UserService } from "../services/user.service";
-import { CreateUserDto, DeleteUserDto, UserLoginDto, UserUpdateDto, UserUpdatePasswordDto } from "../dtos/user.dto";
+import {
+  CreateUserDto,
+  DeleteUserDto,
+  UserLoginDto,
+  UserAddressCreateDto,
+  UserUpdatePasswordDto,
+  UserUpdateDto,
+  UserAddressUpdateDto
+} from "../dtos/user.dto";
 import { loginConsecutiveLimiter, loginDayLimiter } from "../../middleware/rateLimiters";
 import jwt from 'jsonwebtoken';
 import { serialize } from 'cookie';
@@ -11,11 +19,10 @@ const router = Router();
 
 router.post('/register', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { email, name, lastname, password } = req.body;
+    const { email, country, password } = req.body;
     const userDto = new CreateUserDto();
     userDto.email = email;
-    userDto.lastname = lastname;
-    userDto.name = name;
+    userDto.country = country;
     userDto.password = password;
     const errors = await validate(userDto);
     if (errors.length) {
@@ -23,6 +30,7 @@ router.post('/register', async (req: Request, res: Response, next: NextFunction)
     }
     const userService = new UserService();
     const createdUser = await userService.create(req.body);
+    if (!createdUser) return res.status(400).send('User already exists');
     const sessionToken = jwt.sign({
       role: createdUser.role,
       id: createdUser.id
@@ -109,13 +117,12 @@ router.delete('/', isAdmin, async (req: Request, res: Response, next: NextFuncti
   }
 });
 
-router.patch('/', async (req: Request, res: Response, next: NextFunction) => {
+router.patch('/', isNotLoggedIn, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id, lastname, name } = req.body;
+    const { id, country } = req.body;
     const updateUserDto = new UserUpdateDto();
     updateUserDto.id = id;
-    updateUserDto.lastname = lastname;
-    updateUserDto.name = name;
+    updateUserDto.country = country;
     const errors = await validate(updateUserDto);
     if (errors.length) {
       return res.status(400).send(errors);
@@ -150,7 +157,7 @@ router.put('/password', async (req: Request, res: Response, next: NextFunction) 
   }
 });
 
-router.delete('/logout', (req: Request, res: Response, next: NextFunction) => {
+router.delete('/logout', isNotLoggedIn, (req: Request, res: Response, next: NextFunction) => {
   try {
     const logOutCookie = serialize('auth', null, {
       httpOnly: true,
@@ -163,6 +170,86 @@ router.delete('/logout', (req: Request, res: Response, next: NextFunction) => {
     res.sendStatus(200);
   } catch (err) {
     console.log(err.message, err.stack);
+    res.sendStatus(500);
+  }
+});
+
+router.post('/address', isNotLoggedIn, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { userId, name, lastname, address, city, postalCode, phoneNumber, country } = req.body;
+    const userAddressDto = new UserAddressCreateDto();
+    userAddressDto.address = address;
+    userAddressDto.city = city;
+    userAddressDto.country = country;
+    userAddressDto.lastname = lastname;
+    userAddressDto.name = name;
+    userAddressDto.phoneNumber = phoneNumber;
+    userAddressDto.postalCode = postalCode;
+    userAddressDto.userId = userId;
+
+    const errors = await validate(userAddressDto);
+    if (errors.length) {
+      return res.status(400).send(errors);
+    }
+    const userService = new UserService();
+    const userAddressCreated = await userService.createAddress(req.body);
+    if (!userAddressCreated) return res.sendStatus(404);
+    res.send(userAddressCreated);
+  } catch (err) {
+    console.log(err.message, err.stack);
+    res.sendStatus(500);
+  }
+});
+
+router.patch('/address', isNotLoggedIn, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id, name, lastname, address, city, postalCode, phoneNumber, country } = req.body;
+    const userAddressDto = new UserAddressUpdateDto();
+    userAddressDto.address = address;
+    userAddressDto.city = city;
+    userAddressDto.country = country;
+    userAddressDto.lastname = lastname;
+    userAddressDto.name = name;
+    userAddressDto.phoneNumber = phoneNumber;
+    userAddressDto.postalCode = postalCode;
+    userAddressDto.id = id;
+
+    const errors = await validate(userAddressDto);
+    if (errors.length) {
+      return res.status(400).send(errors);
+    }
+
+    const userService = new UserService();
+    const updatedUserAddress = await userService.updateAddress(req.body);
+    if (!updatedUserAddress) return res.sendStatus(404);
+    res.send(updatedUserAddress);
+  } catch (err) {
+    console.log(err.message, err.stack);
+    res.sendStatus(500);
+  }
+});
+
+router.get('/:id/address', isNotLoggedIn, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const userService = new UserService();
+    const foundAddresses = await userService.findAddresses(id);
+    res.send(foundAddresses);
+  } catch (err) {
+    console.log(err.message, err.stack);
+    res.sendStatus(500);
+  }
+});
+
+router.get('/:id/orders', isNotLoggedIn, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const userService = new UserService();
+    const foundOrders = await userService.findOrders(id);
+    res.send(foundOrders);
+  } catch (err) {
+    console.log(err.message, err.stack);
+    res.sendStatus(500);
   }
 });
 

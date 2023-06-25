@@ -3,21 +3,21 @@ import { validate } from 'class-validator';
 import { CreateBirdhouseDto, DeleteBirdhouseDto, UpdateBirdhouseDto } from "../dtos/birdhouse.dto";
 import { BirdhouseService } from "../services/birdhouse.service";
 import { isAdmin } from "../../middleware/auth";
+import { BirdhouseStatusEnum } from "../interfaces/birdhouse.interface";
 import multer from 'multer';
-const upload = multer({ dest: 'uploads/' });
+const upload = multer({ storage: multer.memoryStorage() });
 
 const router = Router();
 
 router.post('/', isAdmin, upload.array('pictures', 9), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { colors, size, price, name, description, stock, styles } = req.body;
+    const { size, price, name, description, stock, styles } = req.body;
     const pictures = req.files;
     const birdhouseDto = new CreateBirdhouseDto();
-    birdhouseDto.colors = colors;
-    birdhouseDto.size = size;
-    birdhouseDto.price = price;
+    birdhouseDto.size = parseInt(size);
+    birdhouseDto.price = parseInt(price);
     birdhouseDto.description = description;
-    birdhouseDto.stock = stock;
+    birdhouseDto.stock = parseInt(stock);
     birdhouseDto.pictures = pictures;
     birdhouseDto.styles = styles;
     birdhouseDto.name = name;
@@ -26,7 +26,7 @@ router.post('/', isAdmin, upload.array('pictures', 9), async (req: Request, res:
       return res.status(400).send(errors);
     }
     const birdhouseService = new BirdhouseService();
-    const result = await birdhouseService.create(req.body);
+    const result = await birdhouseService.create({ ...req.body, pictures });
     res.status(201).send(result);
   } catch (err) {
     console.log(err.message, err.stack);
@@ -51,7 +51,8 @@ router.get('/:id', async (req: Request, res: Response, next:NextFunction) => {
 
 router.delete('/', isAdmin, async (req:Request, res: Response, next: NextFunction) => {
   try {
-    const { birdhouseId, status } = req.body;
+    const birdhouseId = `${req.query.birdhouseId}`;
+    const status = req.query.status === "active" ? BirdhouseStatusEnum.active : BirdhouseStatusEnum.inactive;
     const birdHouseDto = new DeleteBirdhouseDto();
     birdHouseDto.birdhouseId = birdhouseId;
     birdHouseDto.status = status;
@@ -71,11 +72,9 @@ router.delete('/', isAdmin, async (req:Request, res: Response, next: NextFunctio
 
 router.patch('/', isAdmin, async (req:Request, res:Response, next: NextFunction) => {
   try {
-    const { birdhouseId, colors, size, price, name, description, stock, styles } = req.body;
-    const pictures = req.files;
+    const { birdhouseId, size, price, name, description, stock, styles, pictures } = req.body;
     const birdhouseDto = new UpdateBirdhouseDto();
     birdhouseDto.birdhouseId = birdhouseId;
-    birdhouseDto.colors = colors;
     birdhouseDto.size = size;
     birdhouseDto.price = price;
     birdhouseDto.description = description;
@@ -98,10 +97,13 @@ router.patch('/', isAdmin, async (req:Request, res:Response, next: NextFunction)
 
 router.get('/', async (req:Request, res:Response) => {
   try {
-    const { sort, page, search } = req.query;
+    let { sort, page, search } = req.query;
+    if (page === 'undefined') page = undefined;
+    if (sort === 'undefined') sort = undefined;
+    if (search === 'undefined') search = undefined;
     if (!page) return res.status(400).send('Page is required');
     const birdhouseService = new BirdhouseService();
-    const birdhouses = await birdhouseService.getAll(`${search}`, `${sort}`, parseInt(`${page}`));
+    const birdhouses = await birdhouseService.getAll(search, sort, parseInt(`${page}`));
     res.send(birdhouses);
   } catch (err) {
     console.log(err.message, err.stack);

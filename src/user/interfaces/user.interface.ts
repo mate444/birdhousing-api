@@ -8,22 +8,34 @@ export enum UserRoleEnum {
   client = 'client'
 }
 
-export interface UserPermissionInterface {
+export interface IUserPermission {
   id: number;
   permission: string;
 }
 
-export interface UserRoleInterface {
+export interface IUserRole {
   id: number;
   rolename: string;
-  permissions: UserPermissionInterface[];
+  permissions: IUserPermission[];
 }
 
-export interface UserInterface {
-  id: string;
+export interface IUserAddress {
+  id: number;
+  userId: string;
+  address: string;
   name: string;
   lastname: string;
+  country: string;
+  city: string;
+  phoneNumber: string;
+  postalCode: string;
+}
+
+export interface IUserInterface {
+  id: string;
   password: string;
   email: string;
-  roleId: UserRoleInterface[];
+  country: string;
+  roleId: IUserRole;
+  addresses: IUserAddress[]
 }

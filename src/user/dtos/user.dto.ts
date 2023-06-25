@@ -5,28 +5,17 @@ import {
   IsEmail,
   IsStrongPassword,
   IsUUID,
-  IsEnum
+  IsEnum,
+  IsNumber,
+  IsPhoneNumber
 } from "class-validator";
+import { IsCountry } from "../../common/validateCountry";
 import { UserStatusEnum } from "../interfaces/user.interface";
 
 export class CreateUserDto {
   @IsString()
-  @MinLength(1, {
-    message: 'User Name is too short'
-  })
-  @MaxLength(30, {
-    message: 'User Name is too long'
-  })
-    name: string;
-
-  @IsString()
-  @MinLength(1, {
-    message: 'User Lastname is too short'
-  })
-  @MaxLength(30, {
-    message: 'User Lastname is too long'
-  })
-    lastname: string;
+  @IsCountry()
+    country: string;
 
   @MaxLength(255, {
     message: 'User email is too long'
@@ -35,7 +24,7 @@ export class CreateUserDto {
     email: string;
 
   @IsString()
-  @IsStrongPassword()
+  @IsStrongPassword({ minNumbers: 1, minLength: 8, minSymbols: 1 })
     password: string;
 }
 
@@ -54,7 +43,7 @@ export class UserLoginDto {
     email: string;
 
   @IsString()
-  @IsStrongPassword()
+  @IsStrongPassword({ minNumbers: 1, minLength: 8, minSymbols: 1 })
     password: string;
 }
 
@@ -63,22 +52,9 @@ export class UserUpdateDto {
   @IsUUID(4, { message: 'User id must be a V4 UUID' })
     id: string;
 
-  @MinLength(1, {
-    message: 'User Name is too short'
-  })
-  @MaxLength(30, {
-    message: 'User Name is too long'
-  })
-    name: string;
-
   @IsString()
-  @MinLength(1, {
-    message: 'User Lastname is too short'
-  })
-  @MaxLength(30, {
-    message: 'User Lastname is too long'
-  })
-    lastname: string;
+  @IsCountry()
+    country: string;
 }
 
 export class UserUpdatePasswordDto {
@@ -86,10 +62,77 @@ export class UserUpdatePasswordDto {
     email: string;
 
   @IsString()
-  @IsStrongPassword()
+  @IsStrongPassword({ minNumbers: 1, minLength: 8, minSymbols: 1 })
     password: string;
 
   @IsString()
-  @IsStrongPassword()
+  @IsStrongPassword({ minNumbers: 1, minLength: 8, minSymbols: 1 })
     newPassword: string;
+}
+
+class BaseUserAddressDto {
+  @MinLength(1, {
+    message: 'Name is too short'
+  })
+  @MaxLength(30, {
+    message: 'Name is too long'
+  })
+    name: string;
+
+  @IsString()
+  @MinLength(1, {
+    message: 'Lastname is too short'
+  })
+  @MaxLength(30, {
+    message: 'Lastname is too long'
+  })
+    lastname: string;
+
+  @IsString()
+  @MinLength(1, {
+    message: 'User address is too short'
+  })
+  @MaxLength(100, {
+    message: 'User address is too long'
+  })
+    address: string;
+
+  @IsString()
+  @IsCountry({
+    message: 'Invalid User address country'
+  })
+    country: string;
+
+  @IsString()
+  @MinLength(1, {
+    message: 'User address city is too short'
+  })
+  @MaxLength(50, {
+    message: 'User address city is too long'
+  })
+    city: string;
+
+  @IsString()
+  @MinLength(1, {
+    message: 'User address postalCode is too short'
+  })
+  @MaxLength(20, {
+    message: 'User address postalCode is too long'
+  })
+    postalCode: string;
+
+  @IsString()
+  @IsPhoneNumber(null, { message: 'Invalid User address phone number' })
+    phoneNumber: string;
+}
+
+export class UserAddressCreateDto extends BaseUserAddressDto {
+    @IsString()
+    @IsUUID(4, { message: 'User id must be a V4 UUID' })
+      userId: string;
+}
+
+export class UserAddressUpdateDto extends BaseUserAddressDto {
+  @IsNumber({}, { message: 'User Address id must be a number' })
+    id: number;
 }
