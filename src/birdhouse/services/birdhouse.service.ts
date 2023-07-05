@@ -118,7 +118,7 @@ export class BirdhouseService {
 
   async getAll (search: any, sort: any, page: number) {
     try {
-      const numItems = 10;
+      const numItems = 12;
       const totalCount = await this.entityManager.count(Birdhouse);
       const totalPages = Math.ceil(totalCount / numItems);
       const findOptions = {

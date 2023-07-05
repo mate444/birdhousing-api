@@ -13,6 +13,7 @@ router.post('/', isAdmin, upload.array('pictures', 9), async (req: Request, res:
   try {
     const { size, price, name, description, stock, styles } = req.body;
     const pictures = req.files;
+    console.log(req.files)
     const birdhouseDto = new CreateBirdhouseDto();
     birdhouseDto.size = parseInt(size);
     birdhouseDto.price = parseInt(price);

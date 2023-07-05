@@ -39,7 +39,7 @@ export class CreateBirdhouseDto {
 
   @IsArray({ message: 'Birdhouse pictures must be inside an array' })
   @isFile({
-    mime: ['image/jpeg', 'image/jpg', 'image/png']
+    mime: ['image/webp']
   }, {
     each: true, message: 'Birdhouse picture must be [image/jpeg, image/jpg, image/png]'
   })

@@ -1,7 +1,7 @@
 import { ValidationOptions, ValidationArguments, registerDecorator } from 'class-validator';
 
 interface IsFileOptions {
-  mime: ('image/jpg' | 'image/png' | 'image/jpeg')[];
+  mime: ('image/jpg' | 'image/png' | 'image/jpeg' | 'image/webp')[];
 }
 
 export function isFile (options: IsFileOptions, validationOptions?: ValidationOptions) {
@@ -14,6 +14,7 @@ export function isFile (options: IsFileOptions, validationOptions?: ValidationOp
       options: validationOptions,
       validator: {
         validate (value: any, args: ValidationArguments) {
+          if (value?.length < 1) return false;
           if (value?.mimetype && (options?.mime ?? []).includes(value?.mimetype)) {
             return true;
           }
