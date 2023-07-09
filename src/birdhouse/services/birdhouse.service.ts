@@ -119,7 +119,14 @@ export class BirdhouseService {
   async getAll (search: any, sort: any, page: number) {
     try {
       const numItems = 12;
-      const totalCount = await this.entityManager.count(Birdhouse);
+      const totalCountOptions = search
+        ? {
+            where: {
+              name: ILike(`%${search}%`)
+            }
+          }
+        : {};
+      const totalCount = await this.entityManager.count(Birdhouse, totalCountOptions);
       const totalPages = Math.ceil(totalCount / numItems);
       const findOptions = {
         relations: ['styles', 'pictures'],
