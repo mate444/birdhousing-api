@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
 import { BirdhouseStatusEnum } from "../interfaces/birdhouse.interface";
 import { Birdhouse_style } from "./Birdhouse_style.entity";
 import { Birdhouse_picture } from "./Birdhouse_picture.entity";
+import { Birdhouse_socialMedia } from "./Birdhouse_socialMedia.entity";
 
 @Entity()
 export class Birdhouse {
@@ -31,4 +32,7 @@ export class Birdhouse {
 
     @OneToMany(() => Birdhouse_picture, (birdhouse_picture) => birdhouse_picture.birdhouse)
       pictures: Birdhouse_picture[];
+
+    @OneToMany(() => Birdhouse_socialMedia, (birdhouse_socialMedia) => birdhouse_socialMedia.birdhouse)
+      socialMedia: Birdhouse_socialMedia[];
 }
