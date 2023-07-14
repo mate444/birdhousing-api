@@ -11,6 +11,7 @@ import {
 import { OrderStatusEnum } from "../interfaces/order.interface";
 import { Birdhouse } from '../../birdhouse/entities/Birdhouse.entity';
 import { User } from "../../user/entities/User.entity";
+import { User_address } from "../../user/entities/User_address";
 
 @Entity()
 export class Order {
@@ -38,4 +39,7 @@ export class Order {
 
   @ManyToOne(() => User, (user) => user.orders, { cascade: true })
     user: User;
+
+  @ManyToOne(() => User_address)
+    address: User_address;
 }
