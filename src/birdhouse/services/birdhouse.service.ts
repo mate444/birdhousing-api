@@ -8,6 +8,7 @@ import { ILike } from 'typeorm';
 import { getStorage, ref, getDownloadURL, uploadBytesResumable } from 'firebase/storage';
 import { firebaseConfig } from '../../config/firebase';
 import { initializeApp } from 'firebase/app';
+import { Birdhouse_socialMedia } from '../entities/Birdhouse_socialMedia.entity';
 initializeApp(firebaseConfig);
 const storage = getStorage();
 export class BirdhouseService {
@@ -15,7 +16,7 @@ export class BirdhouseService {
   async create (data: BirdhouseInterface) {
     try {
       const birdhouseId = uuid();
-      const entitesToSave = [];
+      const entitiesToSave = [];
       const createdBirdhouse = this.entityManager.create(Birdhouse, {
         birdhouseId,
         name: data.name,
@@ -24,9 +25,27 @@ export class BirdhouseService {
         stock: data.stock,
         size: data.size,
         pictures: [],
-        styles: []
+        styles: [],
+        socialMedia: []
       });
-      entitesToSave.push(createdBirdhouse);
+      entitiesToSave.push(createdBirdhouse);
+      for (let i = 0; i < data.styles.length; i += 1) {
+        const createdStyle = this.entityManager.create(Birdhouse_style, {
+          style: data.styles[i]
+        });
+        createdBirdhouse.styles.push(createdStyle);
+        entitiesToSave.push(createdStyle);
+      }
+      for (let i = 0; i < data.socialMedia.length; i += 1) {
+        const socialMediaUrl = new URL(data.socialMedia[i]);
+        const socialMediaName = socialMediaUrl.hostname.replace(/^www\./, "").replace(/\.com$/, "");
+        const createdSocialMedia = this.entityManager.create(Birdhouse_socialMedia, {
+          link: data.socialMedia[i],
+          name: socialMediaName
+        });
+        createdBirdhouse.socialMedia.push(createdSocialMedia);
+        entitiesToSave.push(createdSocialMedia);
+      }
       for (let i = 0; i < data.pictures.length; i += 1) {
         const picture = data.pictures[i];
         // Firebase image upload
@@ -40,16 +59,9 @@ export class BirdhouseService {
           picture: downloadUrl
         });
         createdBirdhouse.pictures.push(createdPicture);
-        entitesToSave.push(createdPicture);
+        entitiesToSave.push(createdPicture);
       }
-      for (let i = 0; i < data.styles.length; i += 1) {
-        const createdStyle = this.entityManager.create(Birdhouse_style, {
-          style: data.styles[i]
-        });
-        createdBirdhouse.styles.push(createdStyle);
-        entitesToSave.push(createdStyle);
-      }
-      await this.entityManager.save(entitesToSave);
+      await this.entityManager.save(entitiesToSave);
       return "Created";
     } catch (err: any) {
       throw new Error(err);

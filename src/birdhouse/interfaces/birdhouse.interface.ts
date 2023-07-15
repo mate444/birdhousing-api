@@ -14,4 +14,5 @@ export interface BirdhouseInterface {
   size: number;
   pictures: Express.Multer.File[] | undefined;
   styles: string[];
+  socialMedia: string[]
 }

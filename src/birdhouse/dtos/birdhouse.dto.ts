@@ -50,6 +50,10 @@ export class CreateBirdhouseDto {
   @MinLength(1, { each: true, message: 'Birdhouse style is too short' })
   @MaxLength(45, { each: true, message: 'Birdhouse style is too long' })
     styles: string[];
+
+  @IsArray()
+  @IsUrl({}, { each: true })
+    socialMedia: string[];
 }
 
 export class DeleteBirdhouseDto {

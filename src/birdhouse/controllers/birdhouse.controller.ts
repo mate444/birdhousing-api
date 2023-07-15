@@ -11,9 +11,8 @@ const router = Router();
 
 router.post('/', isAdmin, upload.array('pictures', 9), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { size, price, name, description, stock, styles } = req.body;
+    const { size, price, name, description, stock, styles, socialMedia } = req.body;
     const pictures = req.files;
-    console.log(req.files)
     const birdhouseDto = new CreateBirdhouseDto();
     birdhouseDto.size = parseInt(size);
     birdhouseDto.price = parseInt(price);
@@ -22,12 +21,16 @@ router.post('/', isAdmin, upload.array('pictures', 9), async (req: Request, res:
     birdhouseDto.pictures = pictures;
     birdhouseDto.styles = styles;
     birdhouseDto.name = name;
+    birdhouseDto.socialMedia = socialMedia;
     const errors = await validate(birdhouseDto);
     if (errors.length) {
       return res.status(400).send(errors);
     }
     const birdhouseService = new BirdhouseService();
-    const result = await birdhouseService.create({ ...req.body, pictures });
+    const result = await birdhouseService.create({
+      ...req.body,
+      pictures
+    });
     res.status(201).send(result);
   } catch (err) {
     console.log(err.message, err.stack);
