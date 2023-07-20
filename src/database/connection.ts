@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 import { DataSource } from 'typeorm';
 import { Birdhouse } from '../birdhouse/entities/Birdhouse.entity';
 import { Birdhouse_picture } from '../birdhouse/entities/Birdhouse_picture.entity';
+import { Birdhouse_socialMedia } from '../birdhouse/entities/Birdhouse_socialMedia.entity';
 import { Birdhouse_style } from '../birdhouse/entities/Birdhouse_style.entity';
 import { User } from '../user/entities/User.entity';
 import { User_role } from '../user/entities/User_role.entity';
@@ -21,6 +22,7 @@ const AppDataSource = new DataSource({
   entities: [
     Birdhouse,
     Birdhouse_picture,
+    Birdhouse_socialMedia,
     Birdhouse_style,
     Order,
     User,

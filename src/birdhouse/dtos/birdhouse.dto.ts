@@ -39,7 +39,7 @@ export class CreateBirdhouseDto {
 
   @IsArray({ message: 'Birdhouse pictures must be inside an array' })
   @isFile({
-    mime: ['image/jpeg', 'image/jpg', 'image/png']
+    mime: ['image/webp']
   }, {
     each: true, message: 'Birdhouse picture must be [image/jpeg, image/jpg, image/png]'
   })
@@ -50,6 +50,10 @@ export class CreateBirdhouseDto {
   @MinLength(1, { each: true, message: 'Birdhouse style is too short' })
   @MaxLength(45, { each: true, message: 'Birdhouse style is too long' })
     styles: string[];
+
+  @IsArray()
+  @IsUrl({}, { each: true })
+    socialMedia: string[];
 }
 
 export class DeleteBirdhouseDto {
