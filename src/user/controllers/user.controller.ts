@@ -157,7 +157,7 @@ router.put('/password', async (req: Request, res: Response, next: NextFunction) 
   }
 });
 
-router.delete('/logout', isNotLoggedIn, (req: Request, res: Response, next: NextFunction) => {
+router.delete('/logout', (req: Request, res: Response, next: NextFunction) => {
   try {
     const logOutCookie = serialize('auth', null, {
       httpOnly: true,

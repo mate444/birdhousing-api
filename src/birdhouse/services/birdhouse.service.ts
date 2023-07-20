@@ -76,7 +76,8 @@ export class BirdhouseService {
         },
         relations: {
           pictures: true,
-          styles: true
+          styles: true,
+          socialMedia: true
         }
       });
       return foundBirdhouse;
@@ -141,7 +142,7 @@ export class BirdhouseService {
       const totalCount = await this.entityManager.count(Birdhouse, totalCountOptions);
       const totalPages = Math.ceil(totalCount / numItems);
       const findOptions = {
-        relations: ['styles', 'pictures'],
+        relations: ['styles', 'pictures', 'socialMedia'],
         skip: (page - 1) * numItems,
         take: numItems
       };
